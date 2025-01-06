@@ -1,0 +1,32 @@
+{
+  "name": "balad-frontend",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{js,jsx,md}\"",
+    "prepare": "husky",
+    "start": "turbo start"
+  },
+  "devDependencies": {
+    "eslint-plugin-import": "^2.31.0",
+    "husky": "^9.1.6",
+    "prettier": "^3.2.5",
+    "turbo": "^2.2.3"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "npm@10.3.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "dependencies": {
+    "aos": "^2.3.4",
+    "react-quill": "^2.0.0",
+    "zod": "^3.23.8",
+    "zustand": "^5.0.1"
+  }
+}
