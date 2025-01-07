@@ -1,5 +1,3 @@
-'use server'
-
 import Wizard from '@repo/ui/wizard'
 import ApplicationInfo from '@repo/ui/applicationInfo'
 import Applicant from '@repo/ui/applicant'

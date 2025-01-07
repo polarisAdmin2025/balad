@@ -24,6 +24,7 @@ const ApplicationInfo = () => {
   const [loading, setLoading] = useState(true)
   const [config, setConfig] = useState()
   const router = useRouter()
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     const fetchServicePre = async () => {
@@ -32,11 +33,16 @@ const ApplicationInfo = () => {
         const response = await getAction(
           '/admin-config/services-prerequisite/?service_code=01'
         )
-        setConfig(response)
+        if (response instanceof Error) {
+          setError(response)
+        } else {
+          setConfig(response)
+        }
         setLoading(false)
       } catch (error) {
-        setConfig(error)
+        setError(error)
         console.error('Error fetching applicant type:', error)
+        setLoading(false)
       }
     }
     fetchServicePre()
@@ -46,8 +52,8 @@ const ApplicationInfo = () => {
     router.push('/')
   }
 
-  if (config instanceof Error) {
-    throw new Error(config)
+  if (error) {
+    throw error
   }
 
   if (loading || !config) {
@@ -99,7 +105,7 @@ const ApplicationInfo = () => {
           ))}
         </div>
         <ReactQuill
-          value={config[currentSubStep - 1].english_content}
+          value={config[currentSubStep - 1]?.english_content || ''}
           readOnly={true}
           theme="bubble"
           modules={{ toolbar: false }}
