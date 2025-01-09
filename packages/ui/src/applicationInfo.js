@@ -22,60 +22,72 @@ const ApplicationInfo = () => {
     setICLApp
   } = useStore()
   const [loading, setLoading] = useState(true)
-  const [config, setConfig] = useState()
+  const [config, setConfig] = useState(null)
   const router = useRouter()
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    let mounted = true
+
     const fetchServicePre = async () => {
-      setICLApp('service_code', '01')
       try {
         const response = await getAction(
           '/admin-config/services-prerequisite/?service_code=01'
         )
-        if (response instanceof Error) {
-          setError(response)
-        } else {
-          setConfig(response)
+        if (!mounted) return
+
+        if (response.error) {
+          throw new Error(response.error)
         }
-        setLoading(false)
+        
+        setConfig(response)
+        setICLApp('service_code', '01')
       } catch (error) {
-        setError(error)
-        console.error('Error fetching applicant type:', error)
-        setLoading(false)
+        if (mounted) {
+          setError(error)
+          console.error('Error fetching service prerequisites:', error)
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false)
+        }
       }
     }
+
     fetchServicePre()
-  }, [])
+
+    return () => {
+      mounted = false
+    }
+  }, [setICLApp])
 
   const handleCancel = () => {
     router.push('/')
   }
 
   if (error) {
-    throw error
+    return <div className="error-msg">Error loading service prerequisites</div>
   }
 
   if (loading || !config) {
     return <ApplicationInfoSkeleton />
   }
 
-  const handleNextAction = () => {
-    if (currentSubStep === 4) {
-      const createApplication = async () => {
-        try {
-          const applicationNumber = await postAction('/eservice/draft/', ICLApp)
-          setICLApp('draft_number', applicationNumber.draft_number)
-          console.warn(applicationNumber)
-          setCurrentStep(currentStep + 1)
-        } catch (error) {
-          setConfig(error)
-          console.error('Error in create application:', error)
+  const handleNextAction = async () => {
+    try {
+      if (currentSubStep === 4) {
+        const response = await postAction('/eservice/draft/', ICLApp)
+        if (response.error) {
+          throw new Error(response.error)
         }
+        setICLApp('draft_number', response.draft_number)
+        setCurrentStep(currentStep + 1)
+      } else {
+        setCurrentSubStep(currentSubStep + 1)
       }
-      createApplication()
-    } else {
-      setCurrentSubStep(currentSubStep + 1)
+    } catch (error) {
+      setError(error)
+      console.error('Error:', error)
     }
   }
 

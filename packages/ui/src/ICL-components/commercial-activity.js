@@ -17,76 +17,71 @@ import { useRouter } from 'next/navigation'
 
 const CommercialActivity = () => {
   const { isOpen, showModal, closeModal } = useModal()
-  const { ICLApp, setICLApp, currentStep, setCurrentStep, updateICLApp } =
-    useStore()
-  const [boardNo, setBoardNo] = useState(1)
+  const { ICLApp, setICLApp, currentStep, setCurrentStep, updateICLApp } = useStore()
+  const [boardNo, setBoardNo] = useState(0)
   const [errors, setErrors] = useState({})
   const [config, setConfig] = useState()
-
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
+  // Single useEffect for initialization and data fetching
   useEffect(() => {
-    if (ICLApp?.BoardDetails) {
-      setBoardNo(ICLApp['BoardDetails'].length)
-    }
-  }, [ICLApp])
+    let mounted = true
 
-  const createBoardDetails = async () => {
-    const appData = {
-      draft_number: ICLApp.draft_number,
-      board_type_code: '01'
-    }
-    const boarddeatails = await postAction('/eservice/board/', appData)
-
-    if (ICLApp.BoardDetails) {
-      const BoardDetailsArray = [
-        ...ICLApp.BoardDetails,
-        {
-          BoardArea: '',
-          BoardType: '01',
-          BoardID: boarddeatails.id
-        }
-      ]
-      await setICLApp('BoardDetails', BoardDetailsArray)
-    } else {
-      await setICLApp('BoardDetails', [
-        {
-          BoardArea: '',
-          BoardType: '01',
-          BoardID: boarddeatails.id
-        }
-      ])
-    }
-  }
-
-  useEffect(() => {
-    const fetchComercialActivity = async () => {
+    const initialize = async () => {
       try {
-        const mainActivityResponse = await getAction(
-          '/admin-config/main-activity'
-        )
+        // Fetch config data
+        const [mainActivityResponse, boardTypeResponse] = await Promise.all([
+          getAction('/admin-config/main-activity'),
+          getAction('/admin-config/board-types')
+        ])
 
-        const boardTypeResponse = await getAction('/admin-config/board-types')
+        if (!mounted) return
+
         setConfig({
           mainActivity: mainActivityResponse,
           boardType: boardTypeResponse
         })
 
-        setLoading(false)
+        // Create initial board only if needed
+        if (ICLApp?.draft_number && !ICLApp?.BoardDetails) {
+          const appData = {
+            draft_number: ICLApp.draft_number,
+            board_type_code: '01'
+          }
+          const boardDetails = await postAction('/eservice/board/', appData)
+          
+          if (!mounted) return
+
+          setICLApp('BoardDetails', [{
+            BoardArea: '',
+            BoardType: '01',
+            BoardID: boardDetails.id
+          }])
+          setBoardNo(1)
+        }
       } catch (error) {
-        console.error('Error fetching commercial activity:', error)
+        console.error('Error initializing:', error)
+      } finally {
+        if (mounted) {
+          setLoading(false)
+        }
       }
     }
-    if (!ICLApp?.BoardDetails) {
-      createBoardDetails()
-    }
-    fetchComercialActivity()
-  }, [ICLApp])
 
-  if (loading) {
-    return <ThreeColSkeleton />
-  }
+    initialize()
+
+    return () => {
+      mounted = false
+    }
+  }, [ICLApp?.draft_number, setICLApp])
+
+  // Update board count when BoardDetails changes
+  useEffect(() => {
+    if (ICLApp?.BoardDetails) {
+      setBoardNo(ICLApp.BoardDetails.length)
+    }
+  }, [ICLApp?.BoardDetails])
 
   const handleNextAction = () => {
     const validationResult = commericalSchema.safeParse(ICLApp)
@@ -109,7 +104,6 @@ const CommercialActivity = () => {
               area: ICLApp.StoreArea
             }
           }
-          console.warn(appData)
           patchAction(`/eservice/draft/${ICLApp.draft_number}/`, appData)
 
           ICLApp.BoardDetails.forEach(element => {
@@ -122,7 +116,6 @@ const CommercialActivity = () => {
               `/eservice/board-modify/${element.BoardID}/`,
               appDataBoard
             )
-            console.warn(appDataBoard)
           })
 
           setCurrentStep(currentStep + 1)
@@ -140,9 +133,24 @@ const CommercialActivity = () => {
     setCurrentStep(currentStep - 1)
   }
 
-  const AddBoard = () => {
-    createBoardDetails()
-    setBoardNo(previous => previous + 1)
+  const AddBoard = async () => {
+    const appData = {
+      draft_number: ICLApp.draft_number,
+      board_type_code: '01'
+    }
+    const boardDetails = await postAction('/eservice/board/', appData)
+
+    if (ICLApp.BoardDetails) {
+      const BoardDetailsArray = [
+        ...ICLApp.BoardDetails,
+        {
+          BoardArea: '',
+          BoardType: '01',
+          BoardID: boardDetails.id
+        }
+      ]
+      setICLApp('BoardDetails', BoardDetailsArray)
+    }
   }
 
   const handleBillboardTypeChange = (e, index) => {
@@ -186,12 +194,15 @@ const CommercialActivity = () => {
     }
     setICLApp('AdditionalActivity', '')
   }
+
   const handleCancel = () => {
     router.push('/')
   }
+
   const handleAdditionalActivity = e => {
     setICLApp('AdditionalActivity', e.target.value)
   }
+
   const deleteBoard = async index => {
     const newBoardArray = []
     const boardID = ICLApp.BoardDetails[index].BoardID
@@ -201,9 +212,13 @@ const CommercialActivity = () => {
       }
     }
     setICLApp('BoardDetails', newBoardArray)
-
     await deleteAction(`/eservice/board-modify/${boardID}/`)
   }
+
+  if (loading) {
+    return <ThreeColSkeleton />
+  }
+
   return (
     <div className="content-container">
       {isOpen && (
@@ -473,7 +488,7 @@ const CommercialActivity = () => {
                   id="billboard-area-in-meters"
                   className={`select-tag ${errors?.BoardDetails?.[index]?.BoardArea ? 'input-error' : ''}`}
                   value={ICLApp?.BoardDetails[index]?.BoardArea || ''}
-                  onChange={() => handleBillboardAreaChange(event, index)}
+                  onChange={e => handleBillboardAreaChange(e, index)}
                 />
                 {errors.BoardDetails?.[index]?.BoardArea && (
                   <p className="error-msg">
@@ -495,7 +510,7 @@ const CommercialActivity = () => {
                   id="billboard-type"
                   className={`select-tag ${errors?.BoardDetails?.[index]?.BoardType ? 'input-error' : ''}`}
                   value={ICLApp?.BoardDetails[index]?.BoardType}
-                  onChange={() => handleBillboardTypeChange(event, index)}
+                  onChange={e => handleBillboardTypeChange(e, index)}
                 >
                   <option value="">{''}</option>
                   {config?.boardType?.map(type => (
