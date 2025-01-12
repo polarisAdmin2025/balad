@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import useStore, { useModal } from '../shared-store/store'
 import Image from 'next/image'
-import { getAction } from '../util/actions'
+import { getAction, patchAction } from '../util/actions'
 import { Button } from '../button'
 import Modal from '../modal/modal'
 import { useRouter } from 'next/navigation'
@@ -38,6 +38,14 @@ const GeoLocation = () => {
       setErrors(validationResult.error.format())
     } else {
       setErrors({})
+      const appData = {
+        city_code: ICLApp.City,
+        region_code: ICLApp.region,
+        neighborhood_code: ICLApp.neighborhood,
+        street: ICLApp.Street
+      }
+      console.warn(appData)
+      patchAction(`/eservice/draft/${ICLApp.draft_number}/`, appData)
       setCurrentStep(currentStep + 1)
     }
   }

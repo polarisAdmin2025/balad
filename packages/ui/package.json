@@ -16,7 +16,8 @@
     "./application-info-skeleton": "./src/skeletons/application-info-skeleton.js",
     "./two-col-skeleton": "./src/skeletons/two-col-skeleton.js",
     "./three-col-skeleton": "./src/skeletons/three-col-skeleton.js",
-    "./loading-bar": "./src/skeletons/loading-bar.js"
+    "./loading-bar": "./src/skeletons/loading-bar.js",
+    "./util/actions": "./src/util/actions.js"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

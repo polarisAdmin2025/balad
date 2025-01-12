@@ -1,3 +1,6 @@
+'use client'
+
+import Header from '@repo/ui/header'
 import Wizard from '@repo/ui/wizard'
 import ApplicationInfo from '@repo/ui/applicationInfo'
 import Applicant from '@repo/ui/applicant'
@@ -41,10 +44,13 @@ const steps = [
 
 const IssueComLic = () => {
   return (
-    <Wizard
-      steps={steps}
-      title="Services / Individual Services / Issuing a License"
-    />
+    <div>
+      <Header />
+      <Wizard
+        steps={steps}
+        title="Services / Individual Services / Issuing a License"
+      />
+    </div>
   )
 }
 

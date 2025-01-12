@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove experimental and swcMinify options
+  swcMinify: false,
+  experimental: {
+    serverActions: true
+  }
 };
 
 export default nextConfig;
