@@ -12,26 +12,36 @@ const Fees = () => {
   const { currentStep, setCurrentStep, ICLApp } = useStore()
   const [loading, setLoading] = useState(true)
   const [feesData, setFeesData] = useState(null)
+  const [error, setError] = useState(null)
   const { isOpen, showModal, closeModal } = useModal()
   const router = useRouter()
 
   useEffect(() => {
     const fetchFees = async () => {
       try {
+        if (!ICLApp?.draft_number) {
+          throw new Error('Draft number is required')
+        }
+
         const response = await postAction('/payment/calculate-fees/', {
           draft_number: ICLApp.draft_number
         })
+
+        if (!response) {
+          throw new Error('No data received from server')
+        }
+
         setFeesData(response)
+        setError(null)
       } catch (error) {
         console.error('Error fetching fees:', error)
+        setError('Failed to load fees data. Please try again.')
       } finally {
         setLoading(false)
       }
     }
 
-    if (ICLApp?.draft_number) {
-      fetchFees()
-    }
+    fetchFees()
   }, [ICLApp?.draft_number])
 
   const handleNextAction = () => {
@@ -48,6 +58,24 @@ const Fees = () => {
 
   if (loading) {
     return <div className="content-container">Loading fees...</div>
+  }
+
+  if (error) {
+    return (
+      <div className="content-container">
+        <div className="error-bg">
+          <p className="error-msg">{error}</p>
+        </div>
+        <div className="wizard-buttons">
+          <Button variant="secondary" size="lg" onClick={showModal}>
+            Cancel
+          </Button>
+          <Button variant="primary" size="lg" onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -73,7 +101,7 @@ const Fees = () => {
       </div>
       <div className="fees-container">
         <div className="fees-items-container grid grid-col-2">
-          {feesData?.fee.map((feeItem, index) => (
+          {feesData?.fee?.map((feeItem, index) => (
             <>
               <div
                 key={`desc-${index}`}
@@ -96,14 +124,14 @@ const Fees = () => {
           <div
             data-aos="fade-right"
             data-aos-delay="0"
-            style={{ gridColumn: 1, gridRow: feesData?.fee.length + 1 }}
+            style={{ gridColumn: 1, gridRow: feesData?.fee?.length + 1 }}
           >
             Total
           </div>
           <div
             data-aos="fade-right"
             data-aos-delay="0"
-            style={{ gridColumn: 2, gridRow: feesData?.fee.length + 1 }}
+            style={{ gridColumn: 2, gridRow: feesData?.fee?.length + 1 }}
           >
             {feesData?.total_amount} {feesData?.currency}
           </div>
@@ -120,7 +148,7 @@ const Fees = () => {
           style={{ gridColumn: 1, gridRow: 1 }}
         >
           <label htmlFor="phone">Phone</label>
-          <input name="phone" id="phone" className="select-tag"  />
+          <input name="phone" id="phone" className="select-tag" />
         </div>
         <div
           data-aos="fade-right"
@@ -129,7 +157,7 @@ const Fees = () => {
           style={{ gridColumn: 2, gridRow: 1 }}
         >
           <label htmlFor="email">Email</label>
-          <input name="email" id="email" className="select-tag"  />
+          <input name="email" id="email" className="select-tag" />
         </div>
       </div>
       <div className="wizard-buttons">

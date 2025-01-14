@@ -26,7 +26,7 @@ const Header = () => {
   return (
     <nav className="nav-content flex-center">
       <div className="flex-1">
-        <Link href="/">
+        <Link href="#">
           <Image
             className="margin-auto"
             src="/images/logo.webp"
@@ -38,21 +38,21 @@ const Header = () => {
       </div>
       <div className="nav-list flex-center">
         <ul className="nav-list flex-center" role="list">
-          <Link href="/">
+          <a href="#">
             <li>Home Page</li>
-          </Link>
-          <Link href="/services">
+          </a>
+          <a href="/en/individual-services/issue-commercial-license">
             <li>Services</li>
-          </Link>
-          <Link href="#">
+          </a>
+          <a href="#">
             <li>Payment</li>
-          </Link>
-          <Link href="#">
+          </a>
+          <a href="#">
             <li>Employees</li>
-          </Link>
-          <Link href="#">
+          </a>
+          <a href="#">
             <li>Contact Us</li>
-          </Link>
+          </a>
         </ul>
         <div className="search-container">
           <input type="text" placeholder="Search..." className="search-input" />

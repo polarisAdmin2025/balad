@@ -57,9 +57,9 @@ const GeoLocation = () => {
   const handleCityChange = async e => {
     setICLApp('City', e.target.value)
     if (e.target.value) {
-      const city_code = config.cities.find(item => item.code === e.target.value)
+      const city_code =e.target.value
       const regions = await getAction(
-        `/admin-config/regions/?city_id= ${city_code}`
+        `/admin-config/regions/?city_code=${city_code}`
       )
       setICLApp('regions', regions)
     } else {
