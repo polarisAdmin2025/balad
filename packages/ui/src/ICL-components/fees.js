@@ -12,36 +12,41 @@ const Fees = () => {
   const { currentStep, setCurrentStep, ICLApp } = useStore()
   const [loading, setLoading] = useState(true)
   const [feesData, setFeesData] = useState(null)
-  const [error, setError] = useState(null)
   const { isOpen, showModal, closeModal } = useModal()
+    const [error, setError] = useState(null)
+
   const router = useRouter()
 
   useEffect(() => {
     const fetchFees = async () => {
       try {
-        if (!ICLApp?.draft_number) {
+         if (!ICLApp?.draft_number) {
           throw new Error('Draft number is required')
         }
-
-        const response = await postAction('/payment/calculate-fees/', {
+        const appData = {
+          draft_number: ICLApp.draft_number
+        }
+         const response = await postAction('/payment/calculate-fees/', {
           draft_number: ICLApp.draft_number
         })
-
+        
         if (!response) {
           throw new Error('No data received from server')
         }
-
         setFeesData(response)
-        setError(null)
+         setError(null)
+
       } catch (error) {
         console.error('Error fetching fees:', error)
         setError('Failed to load fees data. Please try again.')
+
       } finally {
         setLoading(false)
       }
     }
 
-    fetchFees()
+      fetchFees()
+    
   }, [ICLApp?.draft_number])
 
   const handleNextAction = () => {
@@ -58,24 +63,6 @@ const Fees = () => {
 
   if (loading) {
     return <div className="content-container">Loading fees...</div>
-  }
-
-  if (error) {
-    return (
-      <div className="content-container">
-        <div className="error-bg">
-          <p className="error-msg">{error}</p>
-        </div>
-        <div className="wizard-buttons">
-          <Button variant="secondary" size="lg" onClick={showModal}>
-            Cancel
-          </Button>
-          <Button variant="primary" size="lg" onClick={() => window.location.reload()}>
-            Retry
-          </Button>
-        </div>
-      </div>
-    )
   }
 
   return (
