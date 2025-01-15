@@ -6,8 +6,14 @@ const handleResponse = async (response) => {
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`)
   }
-  const data = await response.json()
-  return data
+  
+  const contentType = response.headers.get('content-type')
+  if (contentType && contentType.includes('application/json')) {
+    const text = await response.text()
+    return text ? JSON.parse(text) : null
+  }
+  
+  return null
 }
 
 export const getAction = async (endpoint) => {
@@ -44,7 +50,7 @@ export const postAction = async (endpoint, data) => {
 export const patchAction = async (endpoint, data) => {
   try {
     const headers = data instanceof FormData 
-      ? {} // Let browser set Content-Type for FormData
+      ? {} 
       : { 'Content-Type': 'application/json' }
     
     const body = data instanceof FormData
