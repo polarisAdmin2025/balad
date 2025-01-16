@@ -17,7 +17,11 @@
     "./two-col-skeleton": "./src/skeletons/two-col-skeleton.js",
     "./three-col-skeleton": "./src/skeletons/three-col-skeleton.js",
     "./loading-bar": "./src/skeletons/loading-bar.js",
-    "./util/actions": "./src/util/actions.js"
+    "./util/actions": "./src/util/actions.js",
+    "./auth/input-field": "./src/auth/input-field.js",
+    "./auth/auth-button": "./src/auth/auth-button.js",
+    "./auth/auth-card": "./src/auth/auth-card.js",
+    "./auth/auth-navbar": "./src/auth/auth-navbar.js"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

@@ -10,13 +10,15 @@
   },
   "dependencies": {
     "@repo/ui": "*",
+    "next": "14.2.16",
     "react": "^18",
     "react-dom": "^18",
-    "next": "14.2.16"
+    "react-phone-input-2": "^2.15.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
     "eslint": "^8",
-    "eslint-config-next": "14.2.16"
+    "eslint-config-next": "14.2.16",
+    "turbo": "^2.3.3"
   }
 }

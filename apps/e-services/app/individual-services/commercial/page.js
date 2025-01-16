@@ -24,6 +24,17 @@ const CommercialServices = () => {
     fetchServices()
   }, [])
 
+  const handleServiceClick = (e, path) => {
+    e.preventDefault()
+    // Check if user is logged in
+    const isLoggedIn = document.cookie.includes('isLoggedIn=true')
+    if (!isLoggedIn) {
+      window.location.href = '/login'
+    } else {
+      window.location.href = path
+    }
+  }
+
   if (loading) {
     return (
       <div>
@@ -57,18 +68,16 @@ const CommercialServices = () => {
         </h1>
         <div style={{
           display: 'flex',
-          flexWrap: 'wrap',
+          justifyContent: 'center',
           gap: '30px',
           maxWidth: '1200px',
-          width: '100%',
-          justifyContent: 'center',
-          alignContent: 'center',
-          flex: 1
+          width: '100%'
         }}>
           {services.map((service) => (
             <Link 
               key={service.id}
               href={service.code === '01' ? '/individual-services/issue-commercial-license' : '#'}
+              onClick={(e) => handleServiceClick(e, service.code === '01' ? '/individual-services/issue-commercial-license' : '#')}
               style={{
                 backgroundColor: '#F8F9FF',
                 padding: '60px 20px',
