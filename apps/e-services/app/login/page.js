@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 
 const Login = () => {
   const router = useRouter()
-  const [isResetMode, setIsResetMode] = useState(false)
+
   const [credentials, setCredentials] = useState({
     username: '',
     password: ''
@@ -57,158 +57,6 @@ const Login = () => {
     }
   }
 
-  const handleResetPassword = async (e) => {
-    e.preventDefault()
-    // Will be implemented when the API is ready
-    console.warn('Reset password functionality will be implemented')
-  }
-
-  const cardStyle = {
-    width: '545px',
-    position: 'relative',
-    borderRadius: '24px',
-    overflow: 'hidden',
-    border: '2px solid #17406D',
-    backgroundColor: '#fff',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-  }
-
-  const backgroundStyle = {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    width: '100%',
-    height: '50%',
-    background: `url('/images/Variant4.png') no-repeat bottom center`,
-    backgroundSize: 'cover',
-    opacity: 0.15,
-    zIndex: 0
-  }
-
-  const contentStyle = {
-    position: 'relative',
-    padding: '48px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    zIndex: 1
-  }
-
-  if (isResetMode) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
-        paddingTop: '100px',
-        backgroundColor: '#F5F5F5'
-      }}>
-        <div style={cardStyle}>
-          <div style={backgroundStyle} />
-          <div style={contentStyle}>
-            <div style={{ marginBottom: '48px', textAlign: 'center' }}>
-              <Image
-                src="/images/Polaris-Logo 4.svg"
-                alt="Balad Logo"
-                width={545}
-                height={171}
-                priority
-              />
-            </div>
-
-            <form onSubmit={handleResetPassword} style={{ width: '100%' }}>
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{
-                  position: 'relative',
-                  width: '100%'
-                }}>
-                  <input
-                    type="text"
-                    name="username"
-                    value={credentials.username}
-                    onChange={handleChange}
-                    placeholder="اسم المستخدم/رقم الهوية"
-                    style={{
-                      width: '100%',
-                      height: '48px',
-                      padding: '12px 16px 12px 48px',
-                      borderRadius: '8px',
-                      border: '1px solid #E6E6E6',
-                      fontSize: '14px',
-                      textAlign: 'right',
-                      direction: 'rtl'
-                    }}
-                  />
-                  <div style={{
-                    position: 'absolute',
-                    left: '16px',
-                    top: '50%',
-                    transform: 'translateY(-50%)'
-                  }}>
-                    <Image
-                      src="/images/users.svg"
-                      alt="User Icon"
-                      width={20}
-                      height={20}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {errors.general && (
-                <p style={{ 
-                  color: '#dc2626',
-                  fontSize: '14px',
-                  marginBottom: '16px',
-                  textAlign: 'center'
-                }}>
-                  {errors.general}
-                </p>
-              )}
-
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                <button
-                  type="button"
-                  onClick={() => setIsResetMode(false)}
-                  style={{
-                    height: '48px',
-                    backgroundColor: 'transparent',
-                    color: '#17406D',
-                    borderRadius: '8px',
-                    border: '1px solid #17406D',
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    padding: '0 20px'
-                  }}
-                >
-                  العودة
-                </button>
-                <button
-                  type="submit"
-                  style={{
-                    height: '48px',
-                    backgroundColor: '#17406D',
-                    color: 'white',
-                    borderRadius: '8px',
-                    border: 'none',
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    padding: '0 20px'
-                  }}
-                >
-                  إرسال
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div style={{
       minHeight: '100vh',
@@ -218,9 +66,6 @@ const Login = () => {
       paddingTop: '100px',
       backgroundColor: '#F5F5F5'
     }}>
-      <div style={cardStyle}>
-        <div style={backgroundStyle} />
-        <div style={contentStyle}>
           <div style={{ marginBottom: '48px', textAlign: 'center' }}>
             <Image
               src="/images/Polaris-Logo 4.svg"
@@ -311,10 +156,7 @@ const Login = () => {
             }}>
               <a 
                 href="#" 
-                onClick={(e) => {
-                  e.preventDefault()
-                  setIsResetMode(true)
-                }}
+
                 style={{
                   color: '#17406D',
                   fontSize: '14px',
