@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, useMapEvents, GeoJSON } from 'react-leaflet'
+import { MapContainer, TileLayer, useMapEvents, Marker } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
@@ -16,10 +16,11 @@ L.Icon.Default.mergeOptions({
 // Amman coordinates
 const center = [31.9454, 35.9284]
 
-const MapEvents = ({ onPositionSelect }) => {
+const MapEvents = ({ onPositionSelect, setMarkerPosition }) => {
   useMapEvents({
     click(e) {
       const { lat, lng } = e.latlng
+      setMarkerPosition([lat, lng])
       onPositionSelect({ lat, lng })
     }
   })
@@ -27,7 +28,7 @@ const MapEvents = ({ onPositionSelect }) => {
 }
 
 const Map = ({ onPositionSelect, selectedArea }) => {
-  const [position, setPosition] = useState(null)
+  const [markerPosition, setMarkerPosition] = useState(null)
   const [map, setMap] = useState(null)
 
   useEffect(() => {
@@ -40,13 +41,6 @@ const Map = ({ onPositionSelect, selectedArea }) => {
     }
   }, [map, selectedArea])
 
-  const handlePositionSelect = (pos) => {
-    setPosition([pos.lat, pos.lng])
-    if (onPositionSelect) {
-      onPositionSelect(pos)
-    }
-  }
-
   return (
     <MapContainer
       center={center}
@@ -55,21 +49,15 @@ const Map = ({ onPositionSelect, selectedArea }) => {
       ref={setMap}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        attribution='&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <MapEvents onPositionSelect={handlePositionSelect} />
-      {position && <Marker position={position} />}
-      {selectedArea?.geojson && (
-        <GeoJSON 
-          data={selectedArea.geojson}
-          style={{
-            fillColor: '#17406D',
-            fillOpacity: 0.3,
-            color: '#17406D',
-            weight: 2
-          }}
-        />
+      <MapEvents 
+        onPositionSelect={onPositionSelect} 
+        setMarkerPosition={setMarkerPosition}
+      />
+      {markerPosition && (
+        <Marker position={markerPosition} />
       )}
     </MapContainer>
   )

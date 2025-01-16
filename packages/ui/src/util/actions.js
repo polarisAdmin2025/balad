@@ -33,12 +33,21 @@ export const getAction = async (endpoint) => {
 
 export const postAction = async (endpoint, data) => {
   try {
+    // Check if data is FormData
+    const isFormData = data instanceof FormData
+    
+    // Set appropriate headers based on data type
+    const headers = isFormData ? {} : {
+      'Content-Type': 'application/json'
+    }
+    
+    // Prepare body based on data type
+    const body = isFormData ? data : JSON.stringify(data)
+    
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
+      headers,
+      body
     })
     return handleResponse(response)
   } catch (error) {

@@ -3,7 +3,7 @@ import useStore from './shared-store/store'
 import Image from 'next/image'
 import { useRef, useState, useEffect } from 'react'
 import { Button } from './button'
-import { getAction } from './util/actions'
+import { getAction, postAction } from './util/actions'
 
 const Attachments = () => {
   const { currentStep, setCurrentStep, ICLApp } = useStore()
@@ -76,13 +76,14 @@ const Attachments = () => {
         ...prev,
         [docId]: {
           file: selectedFile,
-          url: URL.createObjectURL(selectedFile)
+          url: URL.createObjectURL(selectedFile),
+          typeCode: doc.code
         }
       }))
     }
   }
 
-  const handleNextAction = () => {
+  const handleNextAction = async () => {
     const missingRequired = documents
       .filter(doc => doc.is_required)
       .some(doc => !files[doc.id])
@@ -92,7 +93,27 @@ const Attachments = () => {
       return
     }
 
-    setCurrentStep(currentStep + 1)
+    try {
+      const uploadPromises = Object.values(files).map(async (fileData) => {
+        const formData = new FormData()
+        formData.append('file', fileData.file)
+        formData.append('draft_number', ICLApp.draft_number)
+        
+        // Debug log to verify FormData contents
+        console.log('FormData contents:')
+        for (let pair of formData.entries()) {
+          console.log(pair[0] + ': ' + pair[1])
+        }
+        
+        return postAction('/eservice/attachments/', formData)
+      })
+
+      await Promise.all(uploadPromises)
+      setCurrentStep(currentStep + 1)
+    } catch (error) {
+      console.error('Error uploading files:', error)
+      alert('Error uploading files. Please try again.')
+    }
   }
 
   const handlePreviousAction = () => {

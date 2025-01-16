@@ -498,7 +498,7 @@ const CommercialActivity = () => {
                 key={`delete-${index}`}
                 data-aos="fade-right"
                 data-aos-delay="100"
-                className="field-container"
+                className="field-container grid-self-center"
                 style={{ gridColumn: 3, gridRow: index + 1 }}
               >
                {index === 0 ? (
