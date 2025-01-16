@@ -9,6 +9,7 @@ import AuthCard from '@repo/ui/auth/auth-card'
 
 const Login = () => {
   const router = useRouter()
+
   const [credentials, setCredentials] = useState({
     username: '',
     password: ''
@@ -21,6 +22,7 @@ const Login = () => {
   const [isResetMode, setIsResetMode] = useState(false)
   const [resetUsername, setResetUsername] = useState('')
   const [resetStatus, setResetStatus] = useState('')
+
 
   useEffect(() => {
     const isLoggedIn = document.cookie.includes('isLoggedIn=true')
@@ -61,7 +63,6 @@ const Login = () => {
       }))
     }
   }
-
   const handleResetPassword = async (e) => {
     e.preventDefault()
     try {

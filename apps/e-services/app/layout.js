@@ -22,7 +22,7 @@ const RootLayout = ({ children }) => {
       <head>
         <link rel="stylesheet" href="http://localhost:3000/styles/global.css" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
         {children}
       </body>
     </html>

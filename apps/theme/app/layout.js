@@ -14,16 +14,16 @@ const geistMono = localFont({
 
 export const metadata = {
   title: 'Theme',
+
   description: 'Theme app for Balad e-Services',
   icons: {
     icon: '/images/logo.webp'
   }
-}
 
 const RootLayout = ({ children }) => {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
         {children}
       </body>
     </html>
