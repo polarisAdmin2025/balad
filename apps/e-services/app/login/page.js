@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 
 const Login = () => {
   const router = useRouter()
+
   const [credentials, setCredentials] = useState({
     username: '',
     password: ''
@@ -65,37 +66,6 @@ const Login = () => {
       paddingTop: '100px',
       backgroundColor: '#F5F5F5'
     }}>
-      <div style={{
-        width: '545px',
-        position: 'relative',
-        borderRadius: '24px',
-        overflow: 'hidden',
-        border: '2px solid #17406D'
-      }}>
-        <Image
-          src="/images/Variant4.png"
-          alt="Background"
-          width={545}
-          height={800}
-          priority
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'top center'
-          }}
-        />
-        <div style={{
-          position: 'relative',
-          background: 'rgba(255, 255, 255, 0.95)',
-          padding: '48px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center'
-        }}>
           <div style={{ marginBottom: '48px', textAlign: 'center' }}>
             <Image
               src="/images/Polaris-Logo 4.svg"
@@ -186,6 +156,7 @@ const Login = () => {
             }}>
               <a 
                 href="#" 
+
                 style={{
                   color: '#17406D',
                   fontSize: '14px',

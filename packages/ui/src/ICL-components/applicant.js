@@ -164,7 +164,7 @@ const Applicant = () => {
         setTyping(false)
       } catch (error) {
         setConfig(error)
-        console.error('Error fetching applicant type:', error)
+        console.error('Error fetching commercial no:', error)
       }
     }
 
