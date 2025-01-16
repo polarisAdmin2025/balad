@@ -14,8 +14,11 @@ const geistMono = localFont({
 
 export const metadata = {
   title: 'Theme',
-  description: 'Theme application for Balad e-Services'
-}
+
+  description: 'Theme app for Balad e-Services',
+  icons: {
+    icon: '/images/logo.webp'
+  }
 
 const RootLayout = ({ children }) => {
   return (

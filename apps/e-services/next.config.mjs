@@ -1,9 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   swcMinify: false,
-  experimental: {
-    serverActions: true
-  }
+  experimental: {}
 };
 
 export default nextConfig;
