@@ -18,6 +18,7 @@ const handleResponse = async (response) => {
 
 export const getAction = async (endpoint) => {
   try {
+    
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'GET',
       headers: {
@@ -65,7 +66,6 @@ export const patchAction = async (endpoint, data) => {
     const body = data instanceof FormData
       ? data
       : JSON.stringify(data)
-
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'PATCH',
       headers,
@@ -78,12 +78,15 @@ export const patchAction = async (endpoint, data) => {
   }
 }
 
-export const deleteAction = async (endpoint) => {
+export const deleteAction = async (endpoint, body) => {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json'
+      },
+      if(body){
+        body
       }
     })
     return handleResponse(response)

@@ -11,7 +11,7 @@ const nextConfig = {
     return config
   },
   experimental: {
-    forceSwcTransforms: true,
+    forceSwcTransforms: false,
     swcTraceProfiling: false
   }
 };

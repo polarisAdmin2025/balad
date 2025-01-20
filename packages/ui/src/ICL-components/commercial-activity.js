@@ -99,27 +99,31 @@ const CommercialActivity = () => {
     router.push('/')
   }
 
-  const handleNextAction = async () => {
+  const handleNextAction = () => {
     const validationResult = commericalSchema.safeParse(ICLApp)
     if (!validationResult.success) {
       setErrors(validationResult.error.format())
     } else {
-      setErrors({})
-      const appData = {
-        main_activity_code: ICLApp.MainCommerical,
-        sub_activity_code: ICLApp.SubActivity,
-        additional_activity_code: ICLApp.AdditionalActivity,
-        shop: {
-      name: "shop",
-      number: "123",
-      state_number: "123",
-      floor_count: 4,
-      window_count: 2,
-      area: 100
-  }
-      }
-      patchAction(`/eservice/draft/${ICLApp.draft_number}/`, appData)
-      ICLApp.BoardDetails.forEach(element => {
+      for (let i = 0; i < ICLApp.BoardDetails.length; i++) {
+        if (ICLApp.BoardDetails[i].BoardType === '01') {
+          setErrors({})
+          const appData = {
+            main_activity_code: ICLApp.MainCommerical,
+            sub_activity_code: ICLApp.SubActivity,
+            additional_activity_code: ICLApp.AdditionalActivity,
+            shop: {
+              name: ICLApp.StoreName,
+              number: ICLApp.StoreNum,
+              state_number: ICLApp.PropertyNum,
+              floor_count: ICLApp.FloorsNum,
+              window_count: ICLApp.EntrancesNum,
+              area: ICLApp.StoreArea
+            }
+          }
+          console.warn(appData)
+          patchAction(`/eservice/draft/${ICLApp.draft_number}/`, appData)
+
+          ICLApp.BoardDetails.forEach(element => {
             const appDataBoard = {
               board_type_code: element.BoardType,
               area: element.BoardArea,
@@ -131,10 +135,17 @@ const CommercialActivity = () => {
             )
             console.warn(appDataBoard)
           })
-      setCurrentStep(currentStep + 1)
+
+          setCurrentStep(currentStep + 1)
+          break
+        } else if (ICLApp.BoardDetails.length === i + 1) {
+          setErrors({
+            BoardError: 'Please Add At Least One BillBoard'
+          })
+        }
+      }
     }
   }
-
   const handlePreviousAction = () => {
     setCurrentStep(currentStep - 1)
   }
@@ -438,6 +449,9 @@ const CommercialActivity = () => {
         <div data-aos="fade-right" data-aos-delay="150" className="sub-title">
           <h3>Board Details</h3>
         </div>
+            {errors?.BoardError && (
+          <p className="error-msg error-bg">{errors.BoardError}</p>
+        )}
         <div className="grid grid-col-3 grid-self-end">
           {ICLApp?.BoardDetails?.map((board, index) => (
             <>

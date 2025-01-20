@@ -154,7 +154,14 @@ export const geoLocationSchema = z.object({
     .min(1, { message: 'This Field Is Required' })
     .refine(value => value.trim().length > 0, {
       message: 'This Field Is Required'
-    })
+    }),
+  coordinates: z.object({
+    lat: z.number(),
+    lng: z.number()
+  }, {
+    required_error: 'Please select a location on the map',
+    invalid_type_error: 'Please select a location on the map'
+  })
 })
 
 export const feesSchema = z.object({

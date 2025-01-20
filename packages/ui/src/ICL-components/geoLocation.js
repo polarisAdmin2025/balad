@@ -37,29 +37,43 @@ const GeoLocation = () => {
   }, [])
 
   const handleNextAction = () => {
-    const validationResult = geoLocationSchema.safeParse(ICLApp)
+    const validationResult = geoLocationSchema.safeParse({
+      ...ICLApp,
+      coordinates: ICLApp.coordinates || null
+    })
+    
     if (!validationResult.success) {
-      setErrors(validationResult.error.format())
-    } else {
-      setErrors({})
-      const appData = {
-        city_code: ICLApp.City,
-        region_code: ICLApp.region,
-        neighborhood_code: ICLApp.neighborhood,
-        street: ICLApp.Street,
-        gis_information: {
-          area: ICLApp.area,
-          municipality: ICLApp.municipality,
-          secretariat: ICLApp.secretariat,
-          neighborhood: ICLApp.nighborhood,
-          street: ICLApp.street,
-          scheme_number: ICLApp.schemeNumber,
-          land_number: ICLApp.landNumber
-        }
+      const formattedErrors = validationResult.error.format()
+      if (formattedErrors.coordinates?._errors) {
+        setErrors({
+          ...formattedErrors,
+          mapError: formattedErrors.coordinates._errors[0]
+        })
+      } else {
+        setErrors(formattedErrors)
       }
-      patchAction(`/eservice/draft/${ICLApp.draft_number}/`, appData)
-      setCurrentStep(currentStep + 1)
+      return
     }
+
+    setErrors({})
+    const appData = {
+      city_code: ICLApp.City,
+      region_code: ICLApp.region,
+      neighborhood_code: ICLApp.neighborhood,
+      street: ICLApp.Street,
+      gis_information: {
+        area: ICLApp.area,
+        municipality: ICLApp.municipality,
+        secretariat: ICLApp.secretariat,
+        neighborhood: ICLApp.nighborhood,
+        street: ICLApp.street,
+        scheme_number: ICLApp.schemeNumber,
+        land_number: ICLApp.landNumber,
+        coordinates: ICLApp.coordinates
+      }
+    }
+    patchAction(`/eservice/draft/${ICLApp.draft_number}/`, appData)
+    setCurrentStep(currentStep + 1)
   }
 
   const handlePreviousAction = () => {
@@ -171,7 +185,8 @@ const GeoLocation = () => {
       setICLApp('schemeNumber', data.address.postcode ||
                                data.address.postal_code ||
                                '')
-      
+      setICLApp('coordinates', position)
+      setErrors(prev => ({...prev, mapError: null}))
     } catch (error) {
       console.error('Error fetching location details:', error)
       setICLApp('area', '')
@@ -311,6 +326,11 @@ const GeoLocation = () => {
         <div data-aos="fade-right" data-aos-delay="150" className="sub-title">
           <h3>Location</h3>
         </div>
+               {errors?.mapError && (
+              <p className="error-msg error-bg" style={{margin: '10px'}}>
+                {errors.mapError}
+              </p>
+            )}
 
         <div className="grid grid-col-2">
           <div
@@ -333,11 +353,13 @@ const GeoLocation = () => {
               gridColumn: 2, 
               gridRow: 'span 7',
               height: '500px',
-              border: '1px solid #ccc',
-              borderRadius: '5px'
+              border: errors?.mapError ? '1px solid #d37171' : '1px solid #ccc',
+              borderRadius: '5px',
+              marginBottom:'10px'
             }}
           >
             <Map onPositionSelect={handlePositionSelect} selectedArea={selectedArea} />
+           
           </div>
           <div
             data-aos="fade-right"

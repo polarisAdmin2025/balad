@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import useStore, { useModal } from '../shared-store/store'
 import Image from 'next/image'
 import { Button } from '../button'
-import { postAction, patchAction } from '../util/actions'
+import { postAction, patchAction ,deleteAction } from '../util/actions'
 import { useRouter } from 'next/navigation'
 import Modal from '../modal/modal'
 import { feesSchema } from '../util/zod'
@@ -22,13 +22,12 @@ const Fees = () => {
 
   useEffect(() => {
     const fetchFees = async () => {
+        // if(!ICLApp?.fees){
       try {
         if (!ICLApp?.draft_number) {
           throw new Error('Draft number is required')
         }
-        const appData = {
-          draft_number: ICLApp.draft_number
-        }
+
         const response = await postAction('/payment/calculate-fees/', {
           draft_number: ICLApp.draft_number
         })
@@ -36,6 +35,15 @@ const Fees = () => {
         if (!response) {
           throw new Error('No data received from server')
         }
+ 
+        // Store fees data in ICLApp
+        setICLApp('fees', {
+          MainActivity: response.fee[0].amount,
+          ShopAreaFees: response.fee[1].amount,
+          BoardsFees:response.fee[2].amount,
+          totalAmount: response.total_amount
+        })
+
         setFeesData(response)
         setError(null)
 
@@ -46,11 +54,13 @@ const Fees = () => {
       } finally {
         setLoading(false)
       }
+  
+       setLoading(false)
     }
 
     fetchFees()
     
-  }, [ICLApp?.draft_number])
+  }, [ICLApp?.draft_number, setICLApp])
 
   const handleNextAction = async () => {
     try {
@@ -66,7 +76,11 @@ const Fees = () => {
       })
 
       if (!validationResult.success) {
-        setValidationErrors(validationResult.error.format())
+        const formattedErrors = validationResult.error.format()
+        setValidationErrors({
+          phone: formattedErrors.phone?._errors[0],
+          email: formattedErrors.email?._errors[0]
+        })
         return
       }
 
@@ -89,7 +103,18 @@ const Fees = () => {
     }
   }
 
-  const handlePreviousAction = () => {
+  const handlePreviousAction = async () => {
+      try {
+         await deleteAction('/payment/get-fees/', {
+          draft_number: ICLApp.draft_number
+        })
+      } catch (error) {
+        console.error('Error fetching fees:', error)
+        setError('Failed to load fees data. Please try again.')
+
+      } finally {
+        setLoading(false)
+      }
     setCurrentStep(currentStep - 1)
   }
 
@@ -107,10 +132,14 @@ const Fees = () => {
 
     // Store raw phone number
     setICLApp('phone', value)
+    // Clear validation error when user starts typing
+    setValidationErrors(prev => ({...prev, phone: null}))
   }
 
   const handleEmailChange = (e) => {
     setICLApp('email', e.target.value)
+    // Clear validation error when user starts typing
+    setValidationErrors(prev => ({...prev, email: null}))
   }
 
   const handleSuccessClose = () => {
@@ -213,8 +242,8 @@ const Fees = () => {
             onChange={handlePhoneChange}
             placeholder="7XXXXXXXX"
           />
-          {validationErrors?.phone?.message && (
-            <p className="error-msg">{validationErrors.phone.message}</p>
+          {validationErrors?.phone && (
+            <p className="error-msg">{validationErrors.phone}</p>
           )}
         </div>
         <div
@@ -232,8 +261,8 @@ const Fees = () => {
             onChange={handleEmailChange}
             type="email"
           />
-          {validationErrors?.email?.message && (
-            <p className="error-msg">{validationErrors.email.message}</p>
+          {validationErrors?.email && (
+            <p className="error-msg">{validationErrors.email}</p>
           )}
         </div>
       </div>
