@@ -53,6 +53,7 @@ export const applicantSchema = z
       path: ['RegInfo']
     }
   )
+
 export const commericalSchema = z.object({
   MainCommerical: z
     .string({ errorMap: () => ({ message: 'This Field Is Required' }) })
@@ -128,6 +129,7 @@ export const commericalSchema = z.object({
     })
   )
 })
+
 export const geoLocationSchema = z.object({
   City: z
     .string({ errorMap: () => ({ message: 'This Field Is Required' }) })
@@ -152,5 +154,25 @@ export const geoLocationSchema = z.object({
     .min(1, { message: 'This Field Is Required' })
     .refine(value => value.trim().length > 0, {
       message: 'This Field Is Required'
-    })
+    }),
+  coordinates: z.object({
+    lat: z.number(),
+    lng: z.number()
+  }, {
+    required_error: 'Please select a location on the map',
+    invalid_type_error: 'Please select a location on the map'
+  })
+})
+
+export const feesSchema = z.object({
+  phone: z
+    .string({ required_error: 'Phone number is required' })
+    .min(1, { message: 'Phone number is required' })
+    .regex(/^\+962[7-9][0-9]{8}$/, {
+      message: 'Phone number must start with +962 followed by 9 digits'
+    }),
+  email: z
+    .string({ required_error: 'Email is required' })
+    .min(1, { message: 'Email is required' })
+    .email({ message: 'Invalid email address' })
 })

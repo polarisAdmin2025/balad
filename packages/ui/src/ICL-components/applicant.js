@@ -64,18 +64,20 @@ const Applicant = () => {
       setErrors(validationResult.error.format())
     } else {
       setErrors({})
-      if (ICLApp?.RegInfo?.Valid && ICLApp.ApplicantType === '01') {
+
+      if (ICLApp?.RegInfo.Valid && ICLApp.ApplicantType === '01') {
         const appData = {
           applicant_type_code: ICLApp.ApplicantType,
           applicant_number: ICLApp.RegInfo.owners[0].id_number
         }
-        const createAppResponse = await patchAction(
-          `/eservice/draft/${ICLApp.draft_number}/`,
-          appData
-        )
+console.warn('owner',ICLApp.RegInfo.owners[0].id_number)
         const createCompanyResponse = await postAction(
           `/eservice/company/?commercial_record=${ICLApp.RegInfo.commercial_record}&draft_number=${ICLApp.draft_number}`,
           {}
+        )
+        const createAppResponse = await patchAction(
+          `/eservice/draft/${ICLApp.draft_number}/`,
+          appData
         )
         if (createAppResponse && createCompanyResponse) {
           setCurrentStep(currentStep + 1)
@@ -140,7 +142,26 @@ const Applicant = () => {
       commercial_record: e.target.value,
       Show: false
     }
+
+    // Validate the commercial registration number using Zod
+    const validationResult = applicantSchema.safeParse({
+      ...ICLApp,
+      RegInfo: newRegInfo
+    })
+
+    if (!validationResult.success) {
+      setErrors(validationResult.error.format())
+      setICLApp('RegInfo', {
+        commercial_record: e.target.value,
+        Valid: false,
+        Show: false
+      })
+      setTyping(false)
+      return
+    }
+
     setICLApp('RegInfo', newRegInfo)
+    setErrors({})
 
     const fetchCommpany = async () => {
       try {
@@ -153,6 +174,12 @@ const Applicant = () => {
             Valid: false,
             Show: false
           })
+          setErrors(prev => ({
+            ...prev,
+            RegInfo: {
+              _errors: ['Invalid commercial registration number']
+            }
+          }))
         } else {
           setICLApp('RegInfo', {
             ...response.company,
@@ -160,33 +187,29 @@ const Applicant = () => {
             Valid: true,
             Show: true
           })
+          setErrors({})
         }
         setTyping(false)
       } catch (error) {
-        setConfig(error)
+        setICLApp('RegInfo', {
+          commercial_record: e.target.value,
+          Valid: false,
+          Show: false
+        })
+        setErrors(prev => ({
+          ...prev,
+          RegInfo: {
+            _errors: ['Error validating commercial registration number']
+          }
+        }))
+        setTyping(false)
         console.error('Error fetching commercial no:', error)
       }
     }
 
-    const regInfoValidation = applicantSchema.safeParse({
-      ...ICLApp,
-      RegInfo: newRegInfo
-    })
-
-    if (!regInfoValidation.success) {
-      setErrors(regInfoValidation.error.format())
-      setICLApp('RegInfo', {
-        commercial_record: e.target.value,
-        Valid: false,
-        Show: false
-      })
-      setTyping(false)
-    } else {
-      setErrors({})
-      typingTimeout.current = setTimeout(() => {
-        fetchCommpany()
-      }, 500)
-    }
+    typingTimeout.current = setTimeout(() => {
+      fetchCommpany()
+    }, 500)
   }
 
   return (
@@ -311,17 +334,12 @@ const Applicant = () => {
                 <input
                   name="commercial-register"
                   id="commercial-register"
-                  className={`select-tag ${errors?.RegInfo || !ICLApp.RegInfo?.Valid ? 'input-error' : ''}`}
+                  className={`select-tag ${errors?.RegInfo ? 'input-error' : ''}`}
                   value={ICLApp?.RegInfo?.commercial_record || ''}
                   onChange={handleCommercialRegisterationNo}
                 />
-                {errors?.RegInfo && (
+                {errors?.RegInfo?._errors && (
                   <p className="error-msg">{errors.RegInfo._errors[0]}</p>
-                )}
-                {!ICLApp.RegInfo?.Valid && !errors?.RegInfo && (
-                  <p className="error-msg">
-                    This Registration Number Is Not Valid
-                  </p>
                 )}
               </div>
               {typing && <LoadingBar gridCol="span 2" gridRow="4" />}

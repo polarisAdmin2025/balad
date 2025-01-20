@@ -42,6 +42,8 @@ const ApplicationInfo = () => {
         
         setConfig(response)
         setICLApp('service_code', '01')
+        // Set currentSubStep to 1 initially when data is loaded
+        setCurrentSubStep(1)
       } catch (error) {
         if (mounted) {
           setError(error)
@@ -59,7 +61,7 @@ const ApplicationInfo = () => {
     return () => {
       mounted = false
     }
-  }, [setICLApp])
+  }, [setICLApp, setCurrentSubStep])
 
   const handleCancel = () => {
     router.push('/')
@@ -75,7 +77,7 @@ const ApplicationInfo = () => {
 
   const handleNextAction = async () => {
     try {
-      if (currentSubStep === 4) {
+      if (currentSubStep === config.length) {
         const response = await postAction('/eservice/draft/', ICLApp)
         if (response.error) {
           throw new Error(response.error)
@@ -97,6 +99,10 @@ const ApplicationInfo = () => {
     }
   }
 
+  // Calculate dynamic styles for tabs and highlight
+  const tabWidth = config ? `${100 / config.length}%` : '25%'
+  const highlightTransform = `translateX(${(currentSubStep - 1) * 100}%)`
+
   return (
     <div className="content-container">
       <div className="form-content">
@@ -105,12 +111,26 @@ const ApplicationInfo = () => {
           data-aos-delay="0"
           data-aos-mirror="true"
           className="flex-center tabs"
+          style={{ position: 'relative' }}
         >
-          <div className={`tab-highlight-${currentSubStep}`}>{''}</div>
+          <div 
+            style={{
+              position: 'absolute',
+              height: '44px',
+              width: tabWidth,
+              backgroundColor: 'var(--color-primary-bg)',
+              left: 0,
+              borderStartStartRadius: '25px',
+              borderStartEndRadius: '25px',
+              transform: highlightTransform,
+              transition: 'transform 0.3s ease-in-out'
+            }}
+          />
           {config?.map((item, index) => (
             <h3
               key={item.id}
               className={currentSubStep === index + 1 ? 'active' : ''}
+              style={{ flex: `0 0 ${tabWidth}` }}
             >
               {item.english_title}
             </h3>
@@ -141,7 +161,7 @@ const ApplicationInfo = () => {
           </Button>
         )}
         <Button variant="primary" size="lg" onClick={handleNextAction}>
-          {currentStep === 1 && currentSubStep === 4 ? (
+          {currentStep === 1 && currentSubStep === config.length ? (
             'Start'
           ) : (
             <>

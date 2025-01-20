@@ -3,10 +3,10 @@ import useStore from './shared-store/store'
 import Image from 'next/image'
 import { useRef, useState, useEffect } from 'react'
 import { Button } from './button'
-import { getAction } from './util/actions'
+import { getAction, postAction } from './util/actions'
 
 const Attachments = () => {
-  const { currentStep, setCurrentStep, ICLApp } = useStore()
+  const { currentStep, setCurrentStep, ICLApp, setICLApp } = useStore()
   const [documents, setDocuments] = useState([])
   const [loading, setLoading] = useState(true)
   const [files, setFiles] = useState({})
@@ -19,6 +19,21 @@ const Attachments = () => {
         const response = await getAction('/attachment/service_attachment/?service_code=01')
         if (response) {
           setDocuments(response)
+          
+          // Restore files from ICLApp state if they exist
+          if (ICLApp?.attachments) {
+            const restoredFiles = {}
+            Object.entries(ICLApp.attachments).forEach(([docId, fileData]) => {
+              if (fileData) {
+                restoredFiles[docId] = {
+                  file: fileData.file,
+                  url: URL.createObjectURL(fileData.file),
+                  typeCode: fileData.typeCode
+                }
+              }
+            })
+            setFiles(restoredFiles)
+          }
         }
       } catch (error) {
         console.error('Error fetching documents:', error)
@@ -28,6 +43,15 @@ const Attachments = () => {
     }
 
     fetchDocuments()
+
+    // Cleanup URLs when component unmounts
+    return () => {
+      Object.values(files).forEach(file => {
+        if (file.url) {
+          URL.revokeObjectURL(file.url)
+        }
+      })
+    }
   }, [])
 
   const validateFile = (file, doc) => {
@@ -72,17 +96,32 @@ const Attachments = () => {
         return newErrors
       })
 
+      // Store file info in files state for UI
       setFiles(prev => ({
         ...prev,
         [docId]: {
           file: selectedFile,
-          url: URL.createObjectURL(selectedFile)
+          url: URL.createObjectURL(selectedFile),
+          typeCode: doc.code
         }
       }))
+
+      // Store file info in ICLApp
+      setICLApp('attachments', {
+        ...ICLApp?.attachments,
+        [docId]: {
+          file: selectedFile,
+          typeCode: doc.code,
+          name: selectedFile.name,
+          size: selectedFile.size,
+          type: selectedFile.type
+        }
+      })
     }
   }
 
-  const handleNextAction = () => {
+  const handleNextAction = async () => {
+    console.warn(ICLApp.attachments)
     const missingRequired = documents
       .filter(doc => doc.is_required)
       .some(doc => !files[doc.id])
@@ -92,7 +131,21 @@ const Attachments = () => {
       return
     }
 
-    setCurrentStep(currentStep + 1)
+    try {
+      const uploadPromises = Object.values(files).map(async (fileData) => {
+        const formData = new FormData()
+        formData.append('file', fileData.file)
+        formData.append('draft_number', ICLApp.draft_number)
+        
+        return postAction('/eservice/attachments/', formData)
+      })
+
+      await Promise.all(uploadPromises)
+      setCurrentStep(currentStep + 1)
+    } catch (error) {
+      console.error('Error uploading files:', error)
+      alert('Error uploading files. Please try again.')
+    }
   }
 
   const handlePreviousAction = () => {
@@ -106,6 +159,7 @@ const Attachments = () => {
   }
 
   const handleDeleteFile = (docId) => {
+    // Remove from files state
     setFiles(prev => {
       const newFiles = { ...prev }
       if (newFiles[docId]?.url) {
@@ -113,6 +167,12 @@ const Attachments = () => {
       }
       delete newFiles[docId]
       return newFiles
+    })
+
+    // Remove from ICLApp state
+    setICLApp('attachments', {
+      ...ICLApp?.attachments,
+      [docId]: undefined
     })
 
     setErrors(prev => {
