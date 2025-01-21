@@ -46,11 +46,11 @@ const Services = () => {
           textAlign: 'right', 
           marginBottom: '40px', 
           fontSize: '24px',
-          color: '#FFFFFF',
+          color: '#17406d',
           fontWeight: 'bold',
-          alignSelf: 'flex-end'
+          alignSelf: 'flex-start'
         }}>
-          الخدمات
+          Services
         </h1>
         <div style={{
           display: 'grid',

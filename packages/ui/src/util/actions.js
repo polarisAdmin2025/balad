@@ -6,12 +6,19 @@ const handleResponse = async (response) => {
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`)
   }
-  const data = await response.json()
-  return data
+  
+  const contentType = response.headers.get('content-type')
+  if (contentType && contentType.includes('application/json')) {
+    const text = await response.text()
+    return text ? JSON.parse(text) : null
+  }
+  
+  return null
 }
 
 export const getAction = async (endpoint) => {
   try {
+    
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'GET',
       headers: {
@@ -27,12 +34,21 @@ export const getAction = async (endpoint) => {
 
 export const postAction = async (endpoint, data) => {
   try {
+    // Check if data is FormData
+    const isFormData = data instanceof FormData
+    
+    // Set appropriate headers based on data type
+    const headers = isFormData ? {} : {
+      'Content-Type': 'application/json'
+    }
+    
+    // Prepare body based on data type
+    const body = isFormData ? data : JSON.stringify(data)
+    
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
+      headers,
+      body
     })
     return handleResponse(response)
   } catch (error) {
@@ -44,13 +60,12 @@ export const postAction = async (endpoint, data) => {
 export const patchAction = async (endpoint, data) => {
   try {
     const headers = data instanceof FormData 
-      ? {} // Let browser set Content-Type for FormData
+      ? {} 
       : { 'Content-Type': 'application/json' }
     
     const body = data instanceof FormData
       ? data
       : JSON.stringify(data)
-
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'PATCH',
       headers,
@@ -63,12 +78,15 @@ export const patchAction = async (endpoint, data) => {
   }
 }
 
-export const deleteAction = async (endpoint) => {
+export const deleteAction = async (endpoint, body) => {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json'
+      },
+      if(body){
+        body
       }
     })
     return handleResponse(response)

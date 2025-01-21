@@ -11,13 +11,17 @@
     "./applicant": "./src/ICL-components/applicant.js",
     "./commercial-activity": "./src/ICL-components/commercial-activity.js",
     "./geoLocation": "./src/ICL-components/geoLocation.js",
-    "./attachments":"./src/attachments.js",
+    "./attachments": "./src/attachments.js",
     "./fees": "./src/ICL-components/fees.js",
     "./application-info-skeleton": "./src/skeletons/application-info-skeleton.js",
     "./two-col-skeleton": "./src/skeletons/two-col-skeleton.js",
     "./three-col-skeleton": "./src/skeletons/three-col-skeleton.js",
     "./loading-bar": "./src/skeletons/loading-bar.js",
-    "./util/actions": "./src/util/actions.js"
+    "./util/actions": "./src/util/actions.js",
+    "./store": "./src/shared-store/store.js",
+    "./applicantccl": "./src/CCL-components/applicant.js",
+    "./commercialccl": "./src/CCL-components/commercial-activity.js"
+    
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

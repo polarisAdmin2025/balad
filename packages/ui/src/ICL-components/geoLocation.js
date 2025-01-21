@@ -8,6 +8,9 @@ import { Button } from '../button'
 import Modal from '../modal/modal'
 import { useRouter } from 'next/navigation'
 import { geoLocationSchema } from '../util/zod'
+import dynamic from 'next/dynamic'
+
+const Map = dynamic(() => import('./map'), { ssr: false })
 
 const GeoLocation = () => {
   const { ICLApp, setICLApp, currentStep, setCurrentStep } = useStore()
@@ -16,6 +19,7 @@ const GeoLocation = () => {
   const { isOpen, showModal, closeModal } = useModal()
   const router = useRouter()
   const [errors, setErrors] = useState({})
+  const [selectedArea, setSelectedArea] = useState(null)
 
   useEffect(() => {
     const fetchApplicantType = async () => {
@@ -33,21 +37,43 @@ const GeoLocation = () => {
   }, [])
 
   const handleNextAction = () => {
-    const validationResult = geoLocationSchema.safeParse(ICLApp)
+    const validationResult = geoLocationSchema.safeParse({
+      ...ICLApp,
+      coordinates: ICLApp.coordinates || null
+    })
+    
     if (!validationResult.success) {
-      setErrors(validationResult.error.format())
-    } else {
-      setErrors({})
-      const appData = {
-        city_code: ICLApp.City,
-        region_code: ICLApp.region,
-        neighborhood_code: ICLApp.neighborhood,
-        street: ICLApp.Street
+      const formattedErrors = validationResult.error.format()
+      if (formattedErrors.coordinates?._errors) {
+        setErrors({
+          ...formattedErrors,
+          mapError: formattedErrors.coordinates._errors[0]
+        })
+      } else {
+        setErrors(formattedErrors)
       }
-      console.warn(appData)
-      patchAction(`/eservice/draft/${ICLApp.draft_number}/`, appData)
-      setCurrentStep(currentStep + 1)
+      return
     }
+
+    setErrors({})
+    const appData = {
+      city_code: ICLApp.City,
+      region_code: ICLApp.region,
+      neighborhood_code: ICLApp.neighborhood,
+      street: ICLApp.Street,
+      gis_information: {
+        area: ICLApp.area,
+        municipality: ICLApp.municipality,
+        secretariat: ICLApp.secretariat,
+        neighborhood: ICLApp.nighborhood,
+        street: ICLApp.street,
+        scheme_number: ICLApp.schemeNumber,
+        land_number: ICLApp.landNumber,
+        coordinates: ICLApp.coordinates
+      }
+    }
+    patchAction(`/eservice/draft/${ICLApp.draft_number}/`, appData)
+    setCurrentStep(currentStep + 1)
   }
 
   const handlePreviousAction = () => {
@@ -57,14 +83,16 @@ const GeoLocation = () => {
   const handleCityChange = async e => {
     setICLApp('City', e.target.value)
     if (e.target.value) {
-      const city_code = config.cities.find(item => item.code === e.target.value)
+      const city_code = e.target.value
       const regions = await getAction(
-        `/admin-config/regions/?city_id= ${city_code}`
+        `/admin-config/regions/?city_code=${city_code}`
       )
       setICLApp('regions', regions)
+      setSelectedArea(null)
     } else {
       setICLApp('regions', [])
       setICLApp('neighborhoods', [])
+      setSelectedArea(null)
     }
     setICLApp('region', '')
     setICLApp('neighborhood', '')
@@ -78,8 +106,26 @@ const GeoLocation = () => {
         `/admin-config/neighborhoods/?region_code=${region_code}`
       )
       setICLApp('neighborhoods', neighborhoods)
+      
+      try {
+        const cityName = config?.cities?.find(city => city.code === ICLApp.City)?.english_name || ''
+        const areaName = e.target.selectedOptions[0].text
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${areaName},${cityName},Jordan&format=json&polygon_geojson=1`
+        )
+        const data = await response.json()
+        if (data && data[0]) {
+          setSelectedArea({
+            name: areaName,
+            bounds: data[0].boundingbox
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching area boundaries:', error)
+      }
     } else {
       setICLApp('neighborhoods', [])
+      setSelectedArea(null)
     }
     setICLApp('neighborhood', '')
   }
@@ -87,9 +133,74 @@ const GeoLocation = () => {
   const handleCancel = () => {
     router.push('/')
   }
-  const handleneighborhoodsChange = e => {
+
+  const handleneighborhoodsChange = async e => {
     setICLApp('neighborhood', e.target.value)
+    if (e.target.value) {
+      try {
+        const cityName = config?.cities?.find(city => city.code === ICLApp.City)?.english_name || ''
+        const areaName = ICLApp?.regions?.find(region => region.code === ICLApp.region)?.english_name || ''
+        const districtName = e.target.selectedOptions[0].text
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${districtName},${areaName},${cityName},Jordan&format=json&polygon_geojson=1`
+        )
+        const data = await response.json()
+        if (data && data[0]) {
+          setSelectedArea({
+            name: districtName,
+            bounds: data[0].boundingbox
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching neighborhood boundaries:', error)
+      }
+    }
   }
+
+  const handlePositionSelect = async position => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.lat}&lon=${position.lng}&addressdetails=1&accept-language=ar&zoom=18`
+      )
+      const data = await response.json()
+      
+      setICLApp('area', data.address.suburb || 
+                      data.address.neighbourhood || 
+                      data.address.quarter ||
+                      data.address.residential ||
+                      '')
+      setICLApp('municipality', data.address.municipality ||
+                               data.address.city_district ||
+                               data.address.town ||
+                               data.address.city ||
+                               '')
+      setICLApp('secretariat', data.address.state_district ||
+                              data.address.state ||
+                              data.address.region ||
+                              '')
+      setICLApp('street', data.address.road ||
+                         data.address.street ||
+                         data.address.footway ||
+                         '')
+      setICLApp('schemeNumber', data.address.postcode ||
+                               data.address.postal_code ||
+                               '')
+      setICLApp('coordinates', position)
+      setErrors(prev => ({...prev, mapError: null}))
+    } catch (error) {
+      console.error('Error fetching location details:', error)
+      setICLApp('area', '')
+      setICLApp('municipality', '')
+      setICLApp('secretariat', '')
+      setICLApp('street', '')
+      setICLApp('schemeNumber', '')
+    }
+  }
+
+  const handleLandNumberChange = (e) => {
+    setICLApp('landNumber', e.target.value)
+  }
+
   return (
     <div className="content-container">
       {isOpen && (
@@ -215,20 +326,13 @@ const GeoLocation = () => {
         <div data-aos="fade-right" data-aos-delay="150" className="sub-title">
           <h3>Location</h3>
         </div>
+               {errors?.mapError && (
+              <p className="error-msg error-bg" style={{margin: '10px'}}>
+                {errors.mapError}
+              </p>
+            )}
 
         <div className="grid grid-col-2">
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3383.5875422080762!2d35.82708997386269!3d31.9991948233325!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x151ca1f58fe4b541%3A0x115e2a5b3f966a9a!2sAl%20Rahmanyeh%2C%20Amman!5e0!3m2!1sen!2sjo!4v1732182770466!5m2!1sen!2sjo"
-            width="100%"
-            height="100%"
-            style={{ border: 0, gridColumn: 2, gridRow: 'span 7' }}
-            allowFullScreen=""
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            title="Google Map"
-          >
-            {''}
-          </iframe>
           <div
             data-aos="fade-right"
             data-aos-delay="200"
@@ -236,7 +340,26 @@ const GeoLocation = () => {
             style={{ gridColumn: 1, gridRow: 1 }}
           >
             <label htmlFor="Area">Area</label>
-            <input name="Area" id="Area" className="select-tag" disabled />
+            <input 
+              name="Area" 
+              id="Area" 
+              className="select-tag" 
+              value={ICLApp?.area || ''}
+              disabled 
+            />
+          </div>
+          <div
+            style={{ 
+              gridColumn: 2, 
+              gridRow: 'span 7',
+              height: '500px',
+              border: errors?.mapError ? '1px solid #d37171' : '1px solid #ccc',
+              borderRadius: '5px',
+              marginBottom:'10px'
+            }}
+          >
+            <Map onPositionSelect={handlePositionSelect} selectedArea={selectedArea} />
+           
           </div>
           <div
             data-aos="fade-right"
@@ -249,6 +372,7 @@ const GeoLocation = () => {
               name="Municipality"
               id="Municipality"
               className="select-tag"
+              value={ICLApp?.municipality || ''}
               disabled
             />
           </div>
@@ -263,6 +387,7 @@ const GeoLocation = () => {
               name="Secretariat"
               id="Secretariat"
               className="select-tag"
+              value={ICLApp?.secretariat || ''}
               disabled
             />
           </div>
@@ -277,6 +402,7 @@ const GeoLocation = () => {
               name="Neighborhood"
               id="Neighborhood"
               className="select-tag"
+              value={ICLApp?.nighborhood || ''}
               disabled
             />
           </div>
@@ -287,7 +413,13 @@ const GeoLocation = () => {
             style={{ gridColumn: 1, gridRow: 5 }}
           >
             <label htmlFor="Street">Street</label>
-            <input name="Street" id="Street" className="select-tag" disabled />
+            <input 
+              name="Street" 
+              id="Street" 
+              className="select-tag" 
+              value={ICLApp?.street || ''}
+              disabled 
+            />
           </div>
           <div
             data-aos="fade-right"
@@ -300,6 +432,7 @@ const GeoLocation = () => {
               name="Scheme-Number"
               id="Scheme-Number"
               className="select-tag"
+              value={ICLApp?.schemeNumber || ''}
               disabled
             />
           </div>
@@ -310,7 +443,13 @@ const GeoLocation = () => {
             style={{ gridColumn: 1, gridRow: 7 }}
           >
             <label htmlFor="Land-Number">Land Number</label>
-            <input name="Land-Number" id="Land-Number" className="select-tag" />
+            <input 
+              name="Land-Number" 
+              id="Land-Number" 
+              className="select-tag"
+              value={ICLApp?.landNumber || ''}
+              onChange={handleLandNumberChange}
+            />
           </div>
         </div>
       </form>

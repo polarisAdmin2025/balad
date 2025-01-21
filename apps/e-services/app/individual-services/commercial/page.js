@@ -4,10 +4,14 @@ import Header from '@repo/ui/header'
 import { getAction } from '@repo/ui/util/actions'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import useStore from '@repo/ui/store'
+import { useRouter } from 'next/navigation'
 
 const CommercialServices = () => {
   const [services, setServices] = useState([])
   const [loading, setLoading] = useState(true)
+  const { ICLApp,setICLApp } = useStore()
+  const router = useRouter()
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -23,6 +27,21 @@ const CommercialServices = () => {
 
     fetchServices()
   }, [])
+
+  const handleServiceClick = (e, path , service) => {
+    e.preventDefault()
+    // Check if user is logged in
+    const isLoggedIn = document.cookie.includes('isLoggedIn=true')
+    
+    // Set the service code first
+    setICLApp('service_code', service.code)
+    
+    if (!isLoggedIn) {
+      router.push('/login')
+    } else {
+      router.push(path)
+    }
+  }
 
   if (loading) {
     return (
@@ -57,18 +76,20 @@ const CommercialServices = () => {
         </h1>
         <div style={{
           display: 'flex',
-          flexWrap: 'wrap',
+          justifyContent: 'center',
           gap: '30px',
           maxWidth: '1200px',
-          width: '100%',
-          justifyContent: 'center',
-          alignContent: 'center',
-          flex: 1
+          width: '100%'
         }}>
           {services.map((service) => (
             <Link 
               key={service.id}
               href={service.code === '01' ? '/individual-services/issue-commercial-license' : '#'}
+              onClick={(e) => handleServiceClick(
+                e, 
+                service.code === '01' ? '/individual-services/issue-commercial-license' : '/individual-services/cancel-commercial-license',
+                service
+              )}
               style={{
                 backgroundColor: '#F8F9FF',
                 padding: '60px 20px',
