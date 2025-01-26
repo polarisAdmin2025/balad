@@ -14,11 +14,7 @@ const nextConfig = {
   },
   experimental: {
     forceSwcTransforms: false,
-    swcTraceProfiling: false,
-    swcMinifyDebugOptions: {
-      compress: false,
-      mangle: false
-    }
+    swcTraceProfiling: false
   }
 };
 

@@ -7,7 +7,7 @@ import { Button } from '../button'
 import { useRouter } from 'next/navigation'
 import Modal from '../modal/modal'
 import { getAction } from '../util/actions'
-import { applicantSchema } from '../util/zod'
+import { cclApplicantSchema } from '../util/zod'
 import LoadingBar from '../skeletons/loading-bar'
 
 const Applicant = () => {
@@ -51,21 +51,21 @@ const Applicant = () => {
   }
 
   const handleNextAction = () => {
-    const validationResult = applicantSchema.safeParse(ICLApp)
+    const validationResult = cclApplicantSchema.safeParse(ICLApp)
     if (!validationResult.success) {
       setErrors(validationResult.error.format())
       return
     }
+    
     setErrors({})
     setCurrentStep(currentStep + 1)
   }
 
   const handleApplicantTypeChange = e => {
-    // Reset all related fields when applicant type changes
     setICLApp('ApplicantType', e.target.value)
-    setICLApp('OnBehalf', '') // Reset Authorized on Behalf
-    setICLApp('RegInfo', { Valid: true }) // Reset RegInfo
-    setICLApp('selectedStores', []) // Reset selected stores
+    setICLApp('OnBehalf', '')
+    setICLApp('RegInfo', { Valid: true })
+    setICLApp('selectedStores', [])
     setErrors({})
   }
 
@@ -92,7 +92,7 @@ const Applicant = () => {
     }
 
     setICLApp('RegInfo', newRegInfo)
-    setICLApp('selectedStores', []) // Reset selected stores when commercial registration changes
+    setICLApp('selectedStores', [])
     setErrors({})
 
     typingTimeout.current = setTimeout(() => {
@@ -157,7 +157,7 @@ const Applicant = () => {
               name="applicant-type"
               id="applicant-type"
               className={`select-tag ${errors?.ApplicantType ? 'input-error' : ''}`}
-              value={ICLApp?.ApplicantType}
+              value={ICLApp?.ApplicantType || ''}
               onChange={handleApplicantTypeChange}
             >
               <option value="">Select Applicant Type</option>
@@ -167,7 +167,7 @@ const Applicant = () => {
                 </option>
               ))}
             </select>
-            {errors.ApplicantType && (
+            {errors?.ApplicantType?._errors && (
               <p className="error-msg">{errors.ApplicantType._errors[0]}</p>
             )}
           </div>
@@ -186,11 +186,11 @@ const Applicant = () => {
                 name="authorized-on-behalf"
                 id="authorized-on-behalf"
                 className={`select-tag ${errors?.OnBehalf ? 'input-error' : ''}`}
-                value={ICLApp?.OnBehalf}
+                value={ICLApp?.OnBehalf || ''}
                 onChange={(e) => {
                   setICLApp('OnBehalf', e.target.value)
-                  setICLApp('RegInfo', { Valid: true }) // Reset RegInfo
-                  setICLApp('selectedStores', []) // Reset selected stores
+                  setICLApp('RegInfo', { Valid: true })
+                  setICLApp('selectedStores', [])
                   setErrors({})
                 }}
               >
@@ -201,7 +201,7 @@ const Applicant = () => {
                   </option>
                 ))}
               </select>
-              {errors.OnBehalf && (
+              {errors?.OnBehalf?._errors && (
                 <p className="error-msg">{errors.OnBehalf._errors[0]}</p>
               )}
             </div>
@@ -244,7 +244,7 @@ const Applicant = () => {
                 />
               </div>
             </div>
-            {errors?.selectedStores && (
+            {errors?.selectedStores?._errors && (
               <p className="error-msg error-bg">{errors.selectedStores._errors[0]}</p>
             )}
             <div style={{ 
@@ -356,11 +356,10 @@ const Applicant = () => {
             </div>
 
             {typing && <LoadingBar gridCol="span 2" gridRow="2" />}
- {errors?.selectedStores && (
+            {errors?.selectedStores?._errors && (
               <p className="error-msg error-bg">{errors.selectedStores._errors[0]}</p>
             )}
             {ICLApp?.RegInfo?.Show && (
-              
               <div style={{ 
                 width: '100%', 
                 border: '1px solid #e5e7eb',
@@ -368,7 +367,6 @@ const Applicant = () => {
                 overflow: 'hidden',
                 marginTop: '20px'
               }}>
-              
                 <table style={{ 
                   width: '100%', 
                   borderCollapse: 'collapse',

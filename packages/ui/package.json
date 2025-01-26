@@ -20,8 +20,8 @@
     "./util/actions": "./src/util/actions.js",
     "./store": "./src/shared-store/store.js",
     "./applicantccl": "./src/CCL-components/applicant.js",
-    "./commercialccl": "./src/CCL-components/commercial-activity.js"
-    
+    "./commercialccl": "./src/CCL-components/commercial-activity.js",
+    "./geoLocationccl": "./src/CCL-components/geoLocation.js"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

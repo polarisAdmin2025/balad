@@ -93,59 +93,61 @@ const CommercialActivity = () => {
     return () => {
       controller.abort()
     }
-  }, []) // Empty dependency array
+  }, [])
 
   const handleCancel = () => {
     router.push('/')
   }
 
   const handleNextAction = () => {
+    const hasMainBoard = ICLApp?.BoardDetails?.some(board => board.BoardType === "01");
+    
+    if (!hasMainBoard) {
+      setErrors(prev => ({
+        ...prev,
+        BoardError: "At least one main board (type 01) is required"
+      }));
+      return;
+    }
+
     const validationResult = commericalSchema.safeParse(ICLApp)
     if (!validationResult.success) {
       setErrors(validationResult.error.format())
-    } else {
-      for (let i = 0; i < ICLApp.BoardDetails.length; i++) {
-        if (ICLApp.BoardDetails[i].BoardType === '01') {
-          setErrors({})
-          const appData = {
-            main_activity_code: ICLApp.MainCommerical,
-            sub_activity_code: ICLApp.SubActivity,
-            additional_activity_code: ICLApp.AdditionalActivity,
-            shop: {
-              name: ICLApp.StoreName,
-              number: ICLApp.StoreNum,
-              state_number: ICLApp.PropertyNum,
-              floor_count: ICLApp.FloorsNum,
-              window_count: ICLApp.EntrancesNum,
-              area: ICLApp.StoreArea
-            }
-          }
-          console.warn(appData)
-          patchAction(`/eservice/draft/${ICLApp.draft_number}/`, appData)
+      return
+    }
 
-          ICLApp.BoardDetails.forEach(element => {
-            const appDataBoard = {
-              board_type_code: element.BoardType,
-              area: element.BoardArea,
-              draft_number: ICLApp.draft_number
-            }
-            patchAction(
-              `/eservice/board-modify/${element.BoardID}/`,
-              appDataBoard
-            )
-            console.warn(appDataBoard)
-          })
-
-          setCurrentStep(currentStep + 1)
-          break
-        } else if (ICLApp.BoardDetails.length === i + 1) {
-          setErrors({
-            BoardError: 'Please Add At Least One BillBoard'
-          })
-        }
+    setErrors({})
+    const appData = {
+      main_activity_code: ICLApp.MainCommerical,
+      sub_activity_code: ICLApp.SubActivity,
+      additional_activity_code: ICLApp.AdditionalActivity,
+      shop: {
+        name: ICLApp.StoreName,
+        number: ICLApp.StoreNum,
+        state_number: ICLApp.PropertyNum,
+        floor_count: ICLApp.FloorsNum,
+        window_count: ICLApp.EntrancesNum,
+        area: ICLApp.StoreArea
       }
     }
+
+    patchAction(`/eservice/draft/${ICLApp.draft_number}/`, appData)
+
+    ICLApp.BoardDetails.forEach(element => {
+      const appDataBoard = {
+        board_type_code: element.BoardType,
+        area: element.BoardArea,
+        draft_number: ICLApp.draft_number
+      }
+      patchAction(
+        `/eservice/board-modify/${element.BoardID}/`,
+        appDataBoard
+      )
+    })
+
+    setCurrentStep(currentStep + 1)
   }
+
   const handlePreviousAction = () => {
     setCurrentStep(currentStep - 1)
   }
@@ -194,7 +196,7 @@ const CommercialActivity = () => {
   }
 
   const handleDeleteBoard = async index => {
-     const newBoardArray = []
+    const newBoardArray = []
     const boardID = ICLApp.BoardDetails[index].BoardID
     for (let i = 0; i < ICLApp.BoardDetails.length; i++) {
       if (ICLApp.BoardDetails[i].BoardID !== boardID) {
@@ -243,7 +245,7 @@ const CommercialActivity = () => {
               name="main-commercial"
               id="main-commercial"
               className={`select-tag ${errors?.MainCommerical ? 'input-error' : ''}`}
-              value={ICLApp?.MainCommerical}
+              value={ICLApp?.MainCommerical || ''}
               onChange={handleMainCommericalChange}
             >
               <option value="">{''}</option>
@@ -253,7 +255,7 @@ const CommercialActivity = () => {
                 </option>
               ))}
             </select>
-            {errors.MainCommerical && (
+            {errors?.MainCommerical?._errors && (
               <p className="error-msg">{errors.MainCommerical._errors[0]}</p>
             )}
           </div>
@@ -270,7 +272,7 @@ const CommercialActivity = () => {
               name="sub-activity"
               id="sub-activity"
               className={`select-tag ${errors?.SubActivity ? 'input-error' : ''}`}
-              value={ICLApp?.SubActivity}
+              value={ICLApp?.SubActivity || ''}
               onChange={handleSubActivityChange}
             >
               <option value="">{''}</option>
@@ -280,7 +282,7 @@ const CommercialActivity = () => {
                 </option>
               ))}
             </select>
-            {errors.SubActivity && (
+            {errors?.SubActivity?._errors && (
               <p className="error-msg">{errors.SubActivity._errors[0]}</p>
             )}
           </div>
@@ -297,7 +299,7 @@ const CommercialActivity = () => {
               name="additional-activity"
               id="additional-activity"
               className={`select-tag ${errors?.AdditionalActivity ? 'input-error' : ''}`}
-              value={ICLApp?.AdditionalActivity}
+              value={ICLApp?.AdditionalActivity || ''}
               onChange={e => {
                 setICLApp('AdditionalActivity', e.target.value)
               }}
@@ -309,7 +311,7 @@ const CommercialActivity = () => {
                 </option>
               ))}
             </select>
-            {errors.AdditionalActivity && (
+            {errors?.AdditionalActivity?._errors && (
               <p className="error-msg">{errors.AdditionalActivity._errors[0]}</p>
             )}
           </div>
@@ -331,7 +333,7 @@ const CommercialActivity = () => {
                 setICLApp('StoreName', e.target.value)
               }}
             />
-            {errors.StoreName && (
+            {errors?.StoreName?._errors && (
               <p className="error-msg">{errors.StoreName._errors[0]}</p>
             )}
           </div>
@@ -353,7 +355,7 @@ const CommercialActivity = () => {
                 setICLApp('StoreNum', e.target.value)
               }}
             />
-            {errors.StoreNum && (
+            {errors?.StoreNum?._errors && (
               <p className="error-msg">{errors.StoreNum._errors[0]}</p>
             )}
           </div>
@@ -375,7 +377,7 @@ const CommercialActivity = () => {
                 setICLApp('PropertyNum', e.target.value)
               }}
             />
-            {errors.PropertyNum && (
+            {errors?.PropertyNum?._errors && (
               <p className="error-msg">{errors.PropertyNum._errors[0]}</p>
             )}
           </div>
@@ -397,7 +399,7 @@ const CommercialActivity = () => {
                 setICLApp('FloorsNum', e.target.value)
               }}
             />
-            {errors.FloorsNum && (
+            {errors?.FloorsNum?._errors && (
               <p className="error-msg">{errors.FloorsNum._errors[0]}</p>
             )}
           </div>
@@ -419,7 +421,7 @@ const CommercialActivity = () => {
                 setICLApp('EntrancesNum', e.target.value)
               }}
             />
-            {errors.EntrancesNum && (
+            {errors?.EntrancesNum?._errors && (
               <p className="error-msg">{errors.EntrancesNum._errors[0]}</p>
             )}
           </div>
@@ -441,7 +443,7 @@ const CommercialActivity = () => {
                 setICLApp('StoreArea', e.target.value)
               }}
             />
-            {errors.StoreArea && (
+            {errors?.StoreArea?._errors && (
               <p className="error-msg">{errors.StoreArea._errors[0]}</p>
             )}
           </div>
@@ -449,7 +451,7 @@ const CommercialActivity = () => {
         <div data-aos="fade-right" data-aos-delay="150" className="sub-title">
           <h3>Board Details</h3>
         </div>
-            {errors?.BoardError && (
+        {errors?.BoardError && (
           <p className="error-msg error-bg">{errors.BoardError}</p>
         )}
         <div className="grid grid-col-3 grid-self-end">
@@ -469,7 +471,7 @@ const CommercialActivity = () => {
                   name={`board-type-${index}`}
                   id={`board-type-${index}`}
                   className={`select-tag ${errors?.BoardDetails?.[index]?.BoardType ? 'input-error' : ''}`}
-                  value={board.BoardType}
+                  value={board.BoardType || ''}
                   onChange={e => handleBoardTypeChange(index, e)}
                 >
                   <option value="">{''}</option>
@@ -479,7 +481,7 @@ const CommercialActivity = () => {
                     </option>
                   ))}
                 </select>
-                {errors?.BoardDetails?.[index]?.BoardType && (
+                {errors?.BoardDetails?.[index]?.BoardType?._errors && (
                   <p className="error-msg">
                     {errors.BoardDetails[index].BoardType._errors[0]}
                   </p>
@@ -499,10 +501,10 @@ const CommercialActivity = () => {
                   name={`board-area-${index}`}
                   id={`board-area-${index}`}
                   className={`select-tag ${errors?.BoardDetails?.[index]?.BoardArea ? 'input-error' : ''}`}
-                  value={board.BoardArea}
+                  value={board.BoardArea || ''}
                   onChange={e => handleBoardAreaChange(index, e)}
                 />
-                {errors?.BoardDetails?.[index]?.BoardArea && (
+                {errors?.BoardDetails?.[index]?.BoardArea?._errors && (
                   <p className="error-msg">
                     {errors.BoardDetails[index].BoardArea._errors[0]}
                   </p>
@@ -515,7 +517,7 @@ const CommercialActivity = () => {
                 className="field-container grid-self-center"
                 style={{ gridColumn: 3, gridRow: index + 1 }}
               >
-               {index === 0 ? (
+                {index === 0 ? (
                   <Button
                     type="button"
                     variant="primary"
@@ -572,4 +574,3 @@ const CommercialActivity = () => {
 }
 
 export default CommercialActivity
-

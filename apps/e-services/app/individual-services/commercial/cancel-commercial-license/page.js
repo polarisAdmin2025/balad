@@ -5,6 +5,10 @@ import Wizard from '@repo/ui/wizard'
 import ApplicationInfo from '@repo/ui/applicationInfo'
 import Applicant from '@repo/ui/applicantccl'
 import CommercialActivity from '@repo/ui/commercialccl'
+import GeoLocation from '@repo/ui/geoLocationccl'
+import Fees from '@repo/ui/fees'
+
+
 
 
 const steps = [
@@ -30,11 +34,15 @@ const steps = [
   {
     step: 4,
     name: 'Geographical Location',
+    component:<GeoLocation />
+    
    
   },
   {
     step: 5,
     name: 'Fees',
+    component:<Fees />
+    
    
   }
 ]

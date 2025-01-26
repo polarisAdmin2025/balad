@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { Button } from '../button'
 import Modal from '../modal/modal'
 import { useRouter } from 'next/navigation'
-import { commericalSchema } from '../util/zod'
+import { cclCommercialSchema } from '../util/zod'
 
 const CommercialActivity = () => {
   const { isOpen, showModal, closeModal } = useModal()
@@ -33,7 +33,7 @@ const CommercialActivity = () => {
   }
 
   const handleNextAction = () => {
-    const validationResult = commericalSchema.safeParse(ICLApp)
+    const validationResult = cclCommercialSchema.safeParse(ICLApp)
     if (!validationResult.success) {
       setErrors(validationResult.error.format())
       return
@@ -69,7 +69,7 @@ const CommercialActivity = () => {
         </Modal>
       )}
       <form className="form-content">
-        <div className="grid grid-col-3">
+        <div className="grid grid-col-2">
           <div
             data-aos="fade-right"
             data-aos-delay="150"
@@ -104,7 +104,7 @@ const CommercialActivity = () => {
             data-aos="fade-right"
             data-aos-delay="250"
             className="field-container"
-            style={{ gridColumn: 3, gridRow: 1 }}
+            style={{ gridColumn: 1, gridRow: 2 }}
           >
             <label htmlFor="property-number">Property Number</label>
             <input
@@ -119,7 +119,7 @@ const CommercialActivity = () => {
             data-aos="fade-right"
             data-aos-delay="300"
             className="field-container"
-            style={{ gridColumn: 1, gridRow: 2 }}
+            style={{ gridColumn: 2, gridRow: 2 }}
           >
             <label htmlFor="floors-number">Floors Number</label>
             <input
@@ -134,7 +134,7 @@ const CommercialActivity = () => {
             data-aos="fade-right"
             data-aos-delay="350"
             className="field-container"
-            style={{ gridColumn: 2, gridRow: 2 }}
+            style={{ gridColumn: 1, gridRow: 3 }}
           >
             <label htmlFor="entrances-number">Entrances Number</label>
             <input
@@ -149,7 +149,7 @@ const CommercialActivity = () => {
             data-aos="fade-right"
             data-aos-delay="400"
             className="field-container"
-            style={{ gridColumn: 3, gridRow: 2 }}
+            style={{ gridColumn: 2, gridRow: 3 }}
           >
             <label htmlFor="store-area">Store Area</label>
             <input
@@ -164,7 +164,7 @@ const CommercialActivity = () => {
             data-aos="fade-right"
             data-aos-delay="450"
             className="field-container"
-            style={{ gridColumn: 1, gridRow: 3 }}
+            style={{ gridColumn: 1, gridRow: 4 }}
           >
             <label htmlFor="cancellation-reason" className="required">Reason for cancellation</label>
             <select
