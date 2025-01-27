@@ -51,14 +51,28 @@ const Applicant = () => {
   }
 
   const handleNextAction = () => {
-    const validationResult = cclApplicantSchema.safeParse(ICLApp)
-    if (!validationResult.success) {
-      setErrors(validationResult.error.format())
-      return
+    try {
+      // Create validation object based on applicant type
+      const validationObject = {
+        ApplicantType: ICLApp?.ApplicantType,
+        RegInfo: ICLApp?.RegInfo || {},
+        selectedStores: ICLApp?.selectedStores || [],
+        ...(ICLApp?.ApplicantType === '02' && { OnBehalf: ICLApp?.OnBehalf })
+      }
+
+      const validationResult = cclApplicantSchema.safeParse(validationObject)
+      
+      if (!validationResult.success) {
+        setErrors(validationResult.error.format())
+        return
+      }
+      
+      setErrors({})
+      setCurrentStep(currentStep + 1)
+    } catch (error) {
+      console.error('Validation error:', error)
+      setErrors({ general: 'An error occurred during validation' })
     }
-    
-    setErrors({})
-    setCurrentStep(currentStep + 1)
   }
 
   const handleApplicantTypeChange = e => {
@@ -76,7 +90,12 @@ const Applicant = () => {
       : [...currentSelected, storeId]
     
     setICLApp('selectedStores', newSelected)
-    setErrors(prev => ({...prev, selectedStores: null}))
+    // Clear store selection error when user makes a selection
+    setErrors(prev => {
+      const newErrors = { ...prev }
+      delete newErrors.selectedStores
+      return newErrors
+    })
   }
 
   const handleCommercialRegisterationNo = e => {
@@ -113,7 +132,9 @@ const Applicant = () => {
         setErrors(prev => ({
           ...prev,
           RegInfo: {
-            _errors: ['Invalid commercial registration number']
+            commercial_record: {
+              _errors: ['Invalid commercial registration number']
+            }
           }
         }))
       }
@@ -244,8 +265,8 @@ const Applicant = () => {
                 />
               </div>
             </div>
-            {errors?.selectedStores?._errors && (
-              <p className="error-msg error-bg">{errors.selectedStores._errors[0]}</p>
+            {errors?.selectedStores && (
+              <p className="error-msg error-bg">{errors.selectedStores._errors}</p>
             )}
             <div style={{ 
               width: '100%', 
@@ -345,19 +366,19 @@ const Applicant = () => {
                   type="text"
                   id="commercial-register"
                   name="commercial-register"
-                  className={`select-tag ${errors?.RegInfo ? 'input-error' : ''}`}
+                  className={`select-tag ${errors?.RegInfo?.commercial_record ? 'input-error' : ''}`}
                   value={ICLApp?.RegInfo?.commercial_record || ''}
                   onChange={handleCommercialRegisterationNo}
                 />
-                {errors?.RegInfo?._errors && (
-                  <p className="error-msg">{errors.RegInfo._errors[0]}</p>
+                {errors?.RegInfo?.commercial_record?._errors && (
+                  <p className="error-msg">{errors.RegInfo.commercial_record._errors[0]}</p>
                 )}
               </div>
             </div>
 
             {typing && <LoadingBar gridCol="span 2" gridRow="2" />}
-            {errors?.selectedStores?._errors && (
-              <p className="error-msg error-bg">{errors.selectedStores._errors[0]}</p>
+            {!errors?.RegInfo?.commercial_record?._errors && errors?.selectedStores && (
+              <p className="error-msg error-bg">{errors.selectedStores._errors}</p>
             )}
             {ICLApp?.RegInfo?.Show && (
               <div style={{ 

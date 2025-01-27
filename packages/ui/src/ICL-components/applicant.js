@@ -158,7 +158,10 @@ const Applicant = () => {
       if (ICLApp?.RegInfo.Valid && ICLApp.ApplicantType === '01') {
         const appData = {
           applicant_type_code: ICLApp.ApplicantType,
-          applicant_number: ICLApp.RegInfo.owners[0].id_number
+          applicant_number: ICLApp.RegInfo.owners[0].id_number,
+           commissioner_code: ICLApp.OnBehalf,
+           beneficiary_number:''
+
         }
 
         const [createCompanyResponse, createAppResponse] = await Promise.all([

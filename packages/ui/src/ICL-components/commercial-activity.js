@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import useStore, { useModal } from '../shared-store/store'
 import Image from 'next/image'
-import { commericalSchema } from '../util/zod'
+import { iclCommercialSchema } from '../util/zod'
 import ThreeColSkeleton from '../skeletons/three-col-skeleton'
 import {
   getAction,
@@ -105,12 +105,12 @@ const CommercialActivity = () => {
     if (!hasMainBoard) {
       setErrors(prev => ({
         ...prev,
-        BoardError: "At least one main board (type 01) is required"
+        BoardError: "At least one Billboard is required"
       }));
       return;
     }
 
-    const validationResult = commericalSchema.safeParse(ICLApp)
+    const validationResult = iclCommercialSchema.safeParse(ICLApp)
     if (!validationResult.success) {
       setErrors(validationResult.error.format())
       return

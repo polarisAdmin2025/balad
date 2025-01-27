@@ -109,8 +109,8 @@ const Fees = () => {
           draft_number: ICLApp.draft_number
         })
       } catch (error) {
-        console.error('Error fetching fees:', error)
         setError('Failed to load fees data. Please try again.')
+        console.error('Error fetching fees:', error)
 
       } finally {
         setLoading(false)

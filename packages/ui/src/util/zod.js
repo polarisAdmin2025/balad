@@ -8,7 +8,7 @@ const baseCommercialSchema = z.object({
   FloorsNum: z.string().optional(),
   EntrancesNum: z.string().optional(),
   StoreArea: z.string().optional()
-});
+})
 
 // Schema for ICL (Issue Commercial License) commercial activity
 export const iclCommercialSchema = baseCommercialSchema.extend({
@@ -51,43 +51,48 @@ export const iclCommercialSchema = baseCommercialSchema.extend({
       })
     )
     .optional()
-});
+})
 
 // Schema for CCL (Cancel Commercial License) commercial activity
 export const cclCommercialSchema = baseCommercialSchema.extend({
   cancellationReason: z
     .string({ errorMap: () => ({ message: 'This Field Is Required' }) })
     .min(1, { message: 'Please select a cancellation reason' })
-});
+})
 
 // Schema for CCL applicant validation
-export const cclApplicantSchema = z.object({
-  ApplicantType: z
-    .string({ errorMap: () => ({ message: 'This Field Is Required' }) })
-    .min(1, { message: 'This Field Is Required' }),
-  OnBehalf: z
-    .string({ errorMap: () => ({ message: 'This Field Is Required' }) })
-    .optional(),
-  RegInfo: z.object({
-    commercial_record: z
+export const cclApplicantSchema = z.discriminatedUnion('ApplicantType', [
+  // For ApplicantType "01" (Owner)
+  z.object({
+    ApplicantType: z.literal('01'),
+    RegInfo: z.object({
+      commercial_record: z.string().optional(),
+      Valid: z.boolean().optional(),
+      Show: z.boolean().optional()
+    }),
+    selectedStores: z
+      .array(z.string())
+      .min(1, { message: 'Please select at least one store' })
+  }),
+  
+  // For ApplicantType "02" (Commissioner)
+  z.object({
+    ApplicantType: z.literal('02'),
+    OnBehalf: z
       .string({ errorMap: () => ({ message: 'This Field Is Required' }) })
       .min(1, { message: 'This Field Is Required' }),
-    Valid: z.boolean().optional(),
-    Show: z.boolean().optional()
-  }),
-  selectedStores: z
-    .array(z.string())
-    .min(1, { message: 'Please select at least one store' })
-}).superRefine((data, ctx) => {
-  // For ApplicantType "Commissioner" (02)
-  if (data.ApplicantType === '02' && !data.OnBehalf) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'This Field Is Required',
-      path: ['OnBehalf']
-    });
-  }
-});
+    RegInfo: z.object({
+      commercial_record: z
+        .string({ errorMap: () => ({ message: 'This Field Is Required' }) })
+        .min(1, { message: 'This Field Is Required' }),
+      Valid: z.boolean().optional(),
+      Show: z.boolean().optional()
+    }),
+    selectedStores: z
+      .array(z.string())
+      .min(1, { message: 'Please select at least one store' })
+  })
+])
 
 // Schema for ICL applicant validation
 export const iclApplicantSchema = z.object({
@@ -114,9 +119,9 @@ export const iclApplicantSchema = z.object({
       code: z.ZodIssueCode.custom,
       message: 'This Field Is Required',
       path: ['OnBehalf']
-    });
+    })
   }
-});
+})
 
 export const geoLocationSchema = z.object({
   City: z
@@ -140,7 +145,7 @@ export const geoLocationSchema = z.object({
     .refine(val => val !== null, {
       message: 'Please select a location on the map'
     })
-});
+})
 
 export const feesSchema = z.object({
   phone: z
@@ -151,4 +156,4 @@ export const feesSchema = z.object({
   email: z
     .string()
     .email({ message: 'Invalid email address' })
-});
+})
