@@ -61,38 +61,65 @@ export const cclCommercialSchema = baseCommercialSchema.extend({
 })
 
 // Schema for CCL applicant validation
-export const cclApplicantSchema = z.discriminatedUnion('ApplicantType', [
-  // For ApplicantType "01" (Owner)
-  z.object({
-    ApplicantType: z.literal('01'),
-    RegInfo: z.object({
-      commercial_record: z.string().optional(),
-      Valid: z.boolean().optional(),
-      Show: z.boolean().optional()
-    }),
-    selectedStores: z
-      .array(z.string())
-      .min(1, { message: 'Please select at least one store' })
+export const cclApplicantSchema = z.object({
+  ApplicantType: z
+    .string({ errorMap: () => ({ message: 'This Field Is Required' }) })
+    .min(1, { message: 'This Field Is Required' }),
+  OnBehalf: z.string().optional(),
+  RegInfo: z.object({
+    commercial_record: z.string().optional(),
+    Valid: z.boolean().optional(),
+    Show: z.boolean().optional()
   }),
+  selectedStores: z.array(z.string())
+}).superRefine((data, ctx) => {
+  // For ApplicantType "01" (Owner)
+  if (data.ApplicantType === '01' && data.selectedStores.length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Please select at least one store',
+      path: ['selectedStores']
+    })
+  }
   
   // For ApplicantType "02" (Commissioner)
-  z.object({
-    ApplicantType: z.literal('02'),
-    OnBehalf: z
-      .string({ errorMap: () => ({ message: 'This Field Is Required' }) })
-      .min(1, { message: 'This Field Is Required' }),
-    RegInfo: z.object({
-      commercial_record: z
-        .string({ errorMap: () => ({ message: 'This Field Is Required' }) })
-        .min(1, { message: 'This Field Is Required' }),
-      Valid: z.boolean().optional(),
-      Show: z.boolean().optional()
-    }),
-    selectedStores: z
-      .array(z.string())
-      .min(1, { message: 'Please select at least one store' })
-  })
-])
+  if (data.ApplicantType === '02') {
+    // Validate OnBehalf is required
+    if (!data.OnBehalf) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'This Field Is Required',
+        path: ['OnBehalf']
+      })
+    }
+    
+    // Validate commercial_record is required and valid
+    if (data.OnBehalf) {
+      if (!data.RegInfo.commercial_record) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'This Field Is Required',
+          path: ['RegInfo', 'commercial_record']
+        })
+      } else if (data.RegInfo.Valid === false) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Invalid commercial registration number',
+          path: ['RegInfo', 'commercial_record']
+        })
+      }
+      
+      // Only validate selectedStores when RegInfo.Show is true
+      if (data.RegInfo.Show === true && data.selectedStores.length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Please select at least one store',
+          path: ['selectedStores']
+        })
+      }
+    }
+  }
+})
 
 // Schema for ICL applicant validation
 export const iclApplicantSchema = z.object({
