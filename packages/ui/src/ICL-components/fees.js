@@ -240,7 +240,7 @@ const Fees = () => {
             className={`select-tag ${validationErrors?.phone ? 'input-error' : ''}`}
             value={ICLApp?.phone || ''}
             onChange={handlePhoneChange}
-            placeholder="7XXXXXXXX"
+            placeholder="9627XXXXXXXX"
           />
           {validationErrors?.phone && (
             <p className="error-msg">{validationErrors.phone}</p>
@@ -260,6 +260,8 @@ const Fees = () => {
             value={ICLApp?.email || ''}
             onChange={handleEmailChange}
             type="email"
+             placeholder="example@example.com"
+
           />
           {validationErrors?.email && (
             <p className="error-msg">{validationErrors.email}</p>

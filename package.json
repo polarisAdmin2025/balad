@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo build",
-    "dev": "turbo dev",
+    "dev": "node scripts/copy-env.js && turbo dev",
     "lint": "turbo lint",
     "format": "prettier --write \"**/*.{js,jsx,md}\"",
     "prepare": "husky",

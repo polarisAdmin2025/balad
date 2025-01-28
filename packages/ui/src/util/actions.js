@@ -1,6 +1,6 @@
 'use client'
 
-const API_BASE_URL = 'https://172.16.2.57/api/v1'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 const handleResponse = async (response) => {
   if (!response.ok) {
@@ -18,7 +18,6 @@ const handleResponse = async (response) => {
 
 export const getAction = async (endpoint) => {
   try {
-    
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'GET',
       headers: {
